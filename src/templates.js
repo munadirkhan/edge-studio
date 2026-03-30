@@ -1,0 +1,42 @@
+export const TEMPLATES = [
+  {
+    id: "night_sky",
+    name: "Night Sky",
+    bg: "#07090f",
+    textColor: "#f0e6d3",
+    accentColor: "#c9a84c",
+    preview: "🌙",
+  },
+  {
+    id: "desert_dawn",
+    name: "Desert Dawn",
+    bg: "#1a0f05",
+    textColor: "#f5deb3",
+    accentColor: "#e8a020",
+    preview: "🏜",
+  },
+  {
+    id: "geometric",
+    name: "Geometric",
+    bg: "#062020",
+    textColor: "#e0f5f0",
+    accentColor: "#5dcaa5",
+    preview: "✦",
+  },
+  {
+    id: "garden",
+    name: "Garden",
+    bg: "#071a0d",
+    textColor: "#e8f5e0",
+    accentColor: "#7ec850",
+    preview: "🌿",
+  },
+  {
+    id: "architecture",
+    name: "Architecture",
+    bg: "#12100a",
+    textColor: "#f8f0e0",
+    accentColor: "#d4a84c",
+    preview: "🕌",
+  },
+];
