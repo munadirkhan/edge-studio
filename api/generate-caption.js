@@ -7,10 +7,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { translation, ayah, surah } = req.body;
+  const { translation, quote, reference, ayah, surah } = req.body;
 
-  if (!translation && !ayah) {
-    return res.status(400).json({ error: "No verse provided" });
+  if (!translation && !quote && !ayah) {
+    return res.status(400).json({ error: "No message provided" });
   }
 
   try {
@@ -19,18 +19,18 @@ export default async function handler(req, res) {
       messages: [
         {
           role: "system",
-          content: "You are a social media assistant for Muslim creators. Write respectful, impactful, shareable Islamic short-form content for TikTok and Instagram Reels.",
+          content: "You are a social media assistant for motivational creators. Write high-retention, impactful short-form content for TikTok and Instagram Reels.",
         },
         {
           role: "user",
-          content: `Generate social media content for this Quranic verse:
+          content: `Generate social media content for this message:
 
-Verse: "${translation || ayah}"
-Reference: ${surah || "The Holy Quran"}
+Message: "${translation || quote || ayah}"
+Reference: ${reference || surah || "EdgeStudio Draft"}
 
 Return EXACTLY this format with these exact labels:
 HOOK: [one punchy opening sentence under 12 words that stops the scroll]
-CAPTION: [2-3 sentences of sincere reflection, warm and personal tone]
+CAPTION: [2-3 sentences of sincere reflection, direct, high-impact tone]
 HASHTAGS: [8 relevant hashtags separated by spaces]`,
         },
       ],
@@ -52,3 +52,4 @@ HASHTAGS: [8 relevant hashtags separated by spaces]`,
     return res.status(500).json({ error: err.message });
   }
 }
+

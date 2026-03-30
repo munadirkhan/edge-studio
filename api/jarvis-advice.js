@@ -19,31 +19,34 @@ export default async function handler(req, res) {
         {
           role: "system",
           content:
-            "You are Habibi, a respectful Quran reflection assistant. Suggest one Quran reference and practical short-form advice. No fatwa, no legal rulings.",
+            "You are JARVIS, a focused short-form content strategy assistant. Return one practical content direction and concise posting advice.",
         },
         {
           role: "user",
-          content: `User context: ${userPrompt}\n\nReturn exactly:\nSURAH_NUMBER: <1-114>\nAYAH_NUMBER: <ayah in that surah>\nWHY: <2 concise sentences>\nPOSTING_TIP: <1 concise sentence for a short-form reel>`,
+          content: `User context: ${userPrompt}\n\nReturn exactly:\nCONTENT_DIRECTION: <2-4 words>\nWHY: <2 concise sentences>\nPOSTING_TIP: <1 concise sentence for a short-form reel>`,
         },
       ],
       max_tokens: 250,
     });
 
     const raw = completion.choices?.[0]?.message?.content || "";
-    const matchNo = raw.match(/SURAH_NUMBER:\s*(\d+)/i);
-    const matchAyah = raw.match(/AYAH_NUMBER:\s*(\d+)/i);
+    const matchDirection = raw.match(/CONTENT_DIRECTION:\s*(.+)/i);
+    
     const matchWhy = raw.match(/WHY:\s*([\s\S]+?)(?=POSTING_TIP:|$)/i);
     const matchTip = raw.match(/POSTING_TIP:\s*(.+)/i);
 
     return res.status(200).json({
-      surahNo: matchNo?.[1] || "",
-      ayahNo: matchAyah?.[1] || "",
+      direction: matchDirection?.[1]?.trim() || "",
+      
       why: matchWhy?.[1]?.trim() || "",
       tip: matchTip?.[1]?.trim() || "",
       raw,
     });
   } catch (err) {
-    console.error("Habibi advice error:", err);
-    return res.status(500).json({ error: err.message || "Habibi request failed" });
+    console.error("JARVIS advice error:", err);
+    return res.status(500).json({ error: err.message || "JARVIS request failed" });
   }
 }
+
+
+

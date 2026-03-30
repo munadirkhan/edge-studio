@@ -1,7 +1,7 @@
 export const TEMPLATES = [
   {
     id: "night_sky",
-    name: "Night Sky",
+    name: "Midnight Drive",
     bg: "#07090f",
     textColor: "#f0e6d3",
     accentColor: "#c9a84c",
@@ -9,7 +9,7 @@ export const TEMPLATES = [
   },
   {
     id: "desert_dawn",
-    name: "Desert Dawn",
+    name: "Sunrise Hustle",
     bg: "#1a0f05",
     textColor: "#f5deb3",
     accentColor: "#e8a020",
@@ -17,7 +17,7 @@ export const TEMPLATES = [
   },
   {
     id: "geometric",
-    name: "Geometric",
+    name: "Neon Focus",
     bg: "#062020",
     textColor: "#e0f5f0",
     accentColor: "#5dcaa5",
@@ -25,7 +25,7 @@ export const TEMPLATES = [
   },
   {
     id: "garden",
-    name: "Garden",
+    name: "Calm Momentum",
     bg: "#071a0d",
     textColor: "#e8f5e0",
     accentColor: "#7ec850",
@@ -33,7 +33,7 @@ export const TEMPLATES = [
   },
   {
     id: "architecture",
-    name: "Architecture",
+    name: "Titan Mode",
     bg: "#12100a",
     textColor: "#f8f0e0",
     accentColor: "#d4a84c",

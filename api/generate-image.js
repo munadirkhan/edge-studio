@@ -5,9 +5,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const PROMPTS = {
   night_sky: "A breathtaking starry night sky over vast desert sand dunes, deep navy blue atmosphere, hundreds of bright stars and a glowing moon, golden light on sand, rich and detailed, no people",
   desert_dawn: "Golden sunrise over layered desert sand dunes, warm amber and orange light rays, rich texture in sand, atmospheric depth, beautiful and detailed, no people",
-  geometric: "Intricate Islamic geometric mosaic tiles, deep teal and gold colors, ornate tessellation pattern, polished marble surface, beautiful symmetrical design, detailed and rich",
+  geometric: "Moody geometric neon pattern with cinematic lighting, premium abstract texture, vertical 9:16 framing, no text, no logos",
   garden: "Lush peaceful garden with flowing water fountain, green plants and white flowers, golden sunlight filtering through leaves, serene and beautiful, no people",
-  architecture: "Grand Islamic architecture interior, ornate marble arches, geometric carvings, warm golden light streaming through windows, rich detail and depth, no people",
+  architecture: "Grand cinematic architecture interior with dramatic shadows, warm highlights, luxury texture, vertical 9:16 framing, no people, no text",
 };
 
 export default async function handler(req, res) {

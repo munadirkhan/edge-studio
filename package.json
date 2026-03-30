@@ -1,5 +1,5 @@
 {
-  "name": "deenstudio",
+  "name": "edge-studio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -28,3 +28,4 @@
     "vite": "^8.0.1"
   }
 }
+
