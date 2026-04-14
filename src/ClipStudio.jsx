@@ -7,10 +7,10 @@ const CLIP_LENGTHS = [
   { label: "60s", value: 60 },
 ];
 const CAPTION_FONTS = [
-  { key: "impact",    label: "Impact" },
-  { key: "bebas",     label: "Arial Black" },
-  { key: "clean",     label: "Segoe UI" },
-  { key: "cinematic", label: "Trebuchet" },
+  { key: "impact",    label: "Impact",      font: "Impact, fantasy",        preview: "IMPACT" },
+  { key: "bebas",     label: "Arial Black", font: "'Arial Black', sans-serif", preview: "BOLD" },
+  { key: "clean",     label: "Segoe UI",    font: "'Segoe UI', sans-serif", preview: "Clean" },
+  { key: "cinematic", label: "Trebuchet",   font: "'Trebuchet MS', sans-serif", preview: "Cinematic" },
 ];
 
 function scoreColor(score) {
@@ -155,11 +155,29 @@ export default function ClipStudio() {
               ))}
             </div>
           </div>
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: "0 0 0.45rem", fontSize: "0.65rem", fontWeight: 700, color: "#5a5755", letterSpacing: "0.06em" }}>CAPTION FONT</p>
-            <div style={{ display: "flex" }}>
+            <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
               {CAPTION_FONTS.map((f) => (
-                <button key={f.key} className={`segment-btn${fontKey === f.key ? " active" : ""}`} onClick={() => setFontKey(f.key)}>{f.label}</button>
+                <button
+                  key={f.key}
+                  onClick={() => setFontKey(f.key)}
+                  style={{
+                    padding: "0.4rem 0.75rem",
+                    borderRadius: 7,
+                    border: `1px solid ${fontKey === f.key ? "var(--accent-border)" : "var(--border)"}`,
+                    background: fontKey === f.key ? "var(--accent-dim)" : "rgba(255,255,255,0.03)",
+                    color: fontKey === f.key ? "var(--accent)" : "#8a8580",
+                    cursor: "pointer",
+                    fontFamily: f.font,
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.01em",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {f.preview}
+                </button>
               ))}
             </div>
           </div>
