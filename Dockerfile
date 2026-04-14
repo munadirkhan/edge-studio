@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Install deps
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy server source
 COPY server/ ./server/
