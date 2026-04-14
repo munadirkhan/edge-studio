@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import CopyrightModal from "./components/CopyrightModal";
+import ExportQueue, { startExport } from "./components/ExportQueue";
 
 const CLIP_COUNTS  = [1, 2, 3, 4, 5];
 const CLIP_LENGTHS = [
@@ -265,12 +267,22 @@ export default function ClipStudio() {
 
 function ClipCard({ clip, playing, onPlay }) {
   const color = scoreColor(clip.viralScore);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]       = useState(false);
+  const [showCopyright, setShowCopyright] = useState(false);
 
   function copyCaption() {
     navigator.clipboard.writeText(clip.caption);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+  }
+
+  function handleDownload() {
+    setShowCopyright(true);
+  }
+
+  function handleConfirmExport() {
+    setShowCopyright(false);
+    startExport(clip);
   }
 
   return (
@@ -360,19 +372,28 @@ function ClipCard({ clip, playing, onPlay }) {
         </p>
 
         {/* Actions */}
+        {showCopyright && (
+          <CopyrightModal
+            clipTitle={clip.title}
+            onConfirm={handleConfirmExport}
+            onClose={() => setShowCopyright(false)}
+          />
+        )}
         <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto", paddingTop: "0.5rem" }}>
-          <a
-            href={clip.downloadUrl}
-            download
+          <button
+            onClick={handleDownload}
             style={{
               flex: 1, padding: "0.55rem 0", fontSize: "0.75rem", fontWeight: 700,
-              textAlign: "center", textDecoration: "none",
+              textAlign: "center", border: "none",
               background: "var(--accent)", color: "#0a0806",
-              borderRadius: 8,
+              borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
+              transition: "opacity 0.15s",
             }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
           >
-            ↓ Download
-          </a>
+            ↓ Export
+          </button>
           <button
             onClick={copyCaption}
             style={{
