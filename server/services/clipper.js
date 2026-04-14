@@ -20,19 +20,20 @@ export async function createClip({ videoPath, start, end, outputDir, jobId, rank
       "-t", String(duration),
       "-vf", vfCrop,
       "-c:v", "libx264",
-      "-preset", "fast",
-      "-crf", "23",
+      "-preset", "ultrafast",
+      "-crf", "26",
+      "-pix_fmt", "yuv420p",
       "-c:a", "aac",
       "-b:a", "128k",
-      "-movflags", "+faststart",
+      "-avoid_negative_ts", "make_zero",
       "-y",
       outputPath,
     ];
 
     execFile(FFMPEG, args, { timeout: 5 * 60 * 1000 }, (err, stdout, stderr) => {
       if (err) {
-        console.error("[clipper] ffmpeg error:", stderr);
-        reject(new Error("FFmpeg clip failed: " + stderr.slice(-300)));
+        console.error("[clipper] ffmpeg FULL stderr:\n", stderr);
+        reject(new Error("FFmpeg clip failed: " + stderr.slice(-600)));
       } else {
         resolve();
       }
