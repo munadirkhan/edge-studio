@@ -193,5 +193,6 @@ async function runPipeline(job, { url, clipCount, clipDuration, fontKey = "impac
   }
 }
 
-const PORT = process.env.VIDEO_PORT || 3001;
-app.listen(PORT, "0.0.0.0", () => console.log(`[server] Video backend running on http://localhost:${PORT}`));
+// Railway uses PORT env var; fall back to VIDEO_PORT for local dev
+const PORT = process.env.PORT || process.env.VIDEO_PORT || 3001;
+app.listen(PORT, "0.0.0.0", () => console.log(`[server] Video backend running on port ${PORT}`));
