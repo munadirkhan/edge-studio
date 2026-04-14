@@ -542,7 +542,7 @@ export default function App() {
         {/* ── Header ── */}
         <header style={{
           borderBottom: "1px solid var(--border)",
-          padding: "1.1rem 2rem",
+          padding: "1rem 2rem",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -550,72 +550,65 @@ export default function App() {
           position: "sticky",
           top: 0,
           zIndex: 10,
-          background: "rgba(6,6,9,0.85)",
+          background: "rgba(6,6,9,0.9)",
         }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-              <span style={accentStyle}>Edge</span>
-              <span style={{ color: "#f0ede8" }}>Studio</span>
-            </h1>
-            <p style={{ margin: 0, fontSize: "0.7rem", color: "#5a5755", letterSpacing: "0.06em", marginTop: 2 }}>
-              AI SHORT-FORM CREATOR
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
-            {/* Mode tabs */}
-            <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
-              {[{ id: "create", label: "✦ Create" }, { id: "clip", label: "✂ Clip" }].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setMode(tab.id)}
-                  style={{
-                    background: mode === tab.id ? "var(--accent)" : "transparent",
-                    color: mode === tab.id ? "#0a0806" : "#6b6568",
-                    border: "none",
-                    borderRadius: 7,
-                    padding: "0.35rem 0.9rem",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-              <span style={{ fontSize: "0.7rem", color: "#5a5755", letterSpacing: "0.04em" }}>JARVIS ONLINE</span>
-            </div>
+          <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
+            <span style={accentStyle}>Edge</span>
+            <span style={{ color: "#f0ede8" }}>Studio</span>
+          </h1>
 
-            {/* Auth button */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
+              <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
+              <span style={{ fontSize: "0.65rem", color: "#4a4745", letterSpacing: "0.05em" }}>JARVIS ONLINE</span>
+            </div>
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                <span style={{ fontSize: "0.72rem", color: "#7a7472", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {user.email}
-                </span>
-                <button
-                  onClick={signOut}
-                  style={{ fontSize: "0.7rem", fontWeight: 600, padding: "0.3rem 0.7rem", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "#5a5755", cursor: "pointer", fontFamily: "inherit" }}
-                >
-                  Sign out
-                </button>
+                <span style={{ fontSize: "0.7rem", color: "#5a5755", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
+                <button onClick={signOut} style={{ fontSize: "0.7rem", padding: "0.3rem 0.65rem", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "#5a5755", cursor: "pointer", fontFamily: "inherit" }}>Sign out</button>
               </div>
             ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="btn-accent"
-                style={{ fontSize: "0.75rem", padding: "0.4rem 0.9rem" }}
-              >
-                Sign in
-              </button>
+              <button onClick={() => setShowAuthModal(true)} className="btn-accent" style={{ fontSize: "0.75rem", padding: "0.38rem 0.9rem" }}>Sign in</button>
             )}
           </div>
         </header>
 
         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+
+        {/* ── Hero ── */}
+        <div style={{ textAlign: "center", padding: "3.5rem 1.5rem 2rem", borderBottom: "1px solid var(--border)" }}>
+          <p style={{ margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", color: "#5a5755" }}>AI SHORT-FORM VIDEO CREATOR</p>
+          <h2 style={{ margin: "0 0 0.75rem", fontSize: "clamp(2rem, 5vw, 3.2rem)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, color: "#f0ede8" }}>
+            Turn any idea or video<br />
+            <span style={accentStyle}>into viral shorts</span>
+          </h2>
+          <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#5a5755", maxWidth: 480, marginInline: "auto" }}>
+            Generate AI-narrated motivational clips with one prompt, or drop a YouTube link and let JARVIS find the best moments automatically.
+          </p>
+
+          {/* Big mode switcher */}
+          <div style={{ display: "inline-flex", gap: "0.75rem", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 16, padding: "0.4rem" }}>
+            {[
+              { id: "create", label: "✦ Create", desc: "AI-generated clips" },
+              { id: "clip",   label: "✂  Clip",  desc: "YouTube → Shorts" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setMode(tab.id)}
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                  padding: "0.85rem 2.5rem", borderRadius: 12, border: "none",
+                  background: mode === tab.id ? "var(--accent)" : "transparent",
+                  color: mode === tab.id ? "#0a0806" : "#6b6568",
+                  cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s",
+                }}
+              >
+                <span style={{ fontSize: "1rem", fontWeight: 800, letterSpacing: "-0.01em" }}>{tab.label}</span>
+                <span style={{ fontSize: "0.65rem", fontWeight: 500, marginTop: 2, opacity: 0.7 }}>{tab.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* ── Main layout ── */}
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem", display: "grid", gridTemplateColumns: "1fr 280px", gap: "1.5rem" }}>
