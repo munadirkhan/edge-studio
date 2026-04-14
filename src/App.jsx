@@ -70,8 +70,8 @@ export default function App() {
   const { user, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Top-level mode
-  const [mode, setMode] = useState("create"); // "create" | "clip"
+  // Top-level mode — null = landing page
+  const [mode, setMode] = useState(null); // null | "create" | "clip"
 
   // Step flow
   const [step, setStep] = useState(1);
@@ -575,42 +575,116 @@ export default function App() {
 
         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
-        {/* ── Hero ── */}
-        <div style={{ textAlign: "center", padding: "3.5rem 1.5rem 2rem", borderBottom: "1px solid var(--border)" }}>
-          <p style={{ margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", color: "#5a5755" }}>AI SHORT-FORM VIDEO CREATOR</p>
-          <h2 style={{ margin: "0 0 0.75rem", fontSize: "clamp(2rem, 5vw, 3.2rem)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, color: "#f0ede8" }}>
-            Turn any idea or video<br />
-            <span style={accentStyle}>into viral shorts</span>
-          </h2>
-          <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#5a5755", maxWidth: 480, marginInline: "auto" }}>
-            Generate AI-narrated motivational clips with one prompt, or drop a YouTube link and let JARVIS find the best moments automatically.
-          </p>
+        {/* ══ LANDING PAGE ══ */}
+        {!mode && (
+          <div>
+            {/* Hero */}
+            <div style={{ minHeight: "88vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "4rem 1.5rem 3rem", position: "relative", overflow: "hidden" }}>
+              {/* Glow */}
+              <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,169,110,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-          {/* Big mode switcher */}
-          <div style={{ display: "inline-flex", gap: "0.75rem", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 16, padding: "0.4rem" }}>
-            {[
-              { id: "create", label: "✦ Create", desc: "AI-generated clips" },
-              { id: "clip",   label: "✂  Clip",  desc: "YouTube → Shorts" },
-            ].map((tab) => (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(201,169,110,0.08)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "0.3rem 0.9rem", marginBottom: "1.75rem" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
+                <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.08em" }}>JARVIS AI ONLINE</span>
+              </div>
+
+              <h1 style={{ margin: "0 0 1.25rem", fontSize: "clamp(2.8rem, 7vw, 5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#f0ede8", maxWidth: 800 }}>
+                Turn any video into<br /><span style={accentStyle}>viral short-form content</span>
+              </h1>
+              <p style={{ margin: "0 0 3rem", fontSize: "1.1rem", color: "#5a5755", maxWidth: 520, lineHeight: 1.65 }}>
+                Paste a YouTube link and EdgeStudio finds your best moments, clips them to 9:16, burns captions, and scores their viral potential — automatically.
+              </p>
+
+              {/* CTA buttons */}
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "1rem" }}>
+                <button
+                  onClick={() => setMode("clip")}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s", boxShadow: "0 0 30px rgba(201,169,110,0.25)" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                >
+                  <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✂ Clip a Video</span>
+                  <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>YouTube URL → viral shorts</span>
+                </button>
+                <button
+                  onClick={() => setMode("create")}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✦ Create a Clip</span>
+                  <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>AI image + voice narration</span>
+                </button>
+              </div>
+              <p style={{ fontSize: "0.72rem", color: "#3a3735" }}>No account needed to start — clips save when signed in</p>
+            </div>
+
+            {/* Features */}
+            <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem" }}>
+              <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+                <p style={{ textAlign: "center", margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#5a5755" }}>WHAT IT DOES</p>
+                <h2 style={{ textAlign: "center", margin: "0 0 3.5rem", fontSize: "clamp(1.6rem, 4vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>
+                  Everything you need to go viral
+                </h2>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem" }}>
+                  {[
+                    { icon: "✂", title: "Auto Clip Finding", desc: "Drop a YouTube URL. Our AI watches the whole video, finds the most engaging moments, and scores each one for viral potential." },
+                    { icon: "⚡", title: "Viral Score Engine", desc: "Every clip gets scored 0-100 based on emotional hooks, surprise factor, shareability, and engagement patterns." },
+                    { icon: "💬", title: "Caption Burn", desc: "Whisper AI transcribes your clips with timestamp precision, then captions are burned directly into the video — no editing needed." },
+                    { icon: "🎙", title: "AI Narration", desc: "Pick a voice and EdgeStudio writes + records a full voiceover script timed perfectly to your clip length." },
+                    { icon: "🎨", title: "Visual Templates", desc: "Six cinematic backgrounds — forest, ocean, moonlight, sakura, city, gym — generated by DALL-E 3 for every clip." },
+                    { icon: "📱", title: "9:16 Ready", desc: "Every clip is auto-cropped to vertical format, ready to upload directly to TikTok, Instagram Reels, or YouTube Shorts." },
+                  ].map((f) => (
+                    <div key={f.title} className="glass-card" style={{ padding: "1.5rem" }}>
+                      <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{f.icon}</div>
+                      <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", fontWeight: 700, color: "#f0ede8" }}>{f.title}</h3>
+                      <p style={{ margin: 0, fontSize: "0.82rem", color: "#5a5755", lineHeight: 1.6 }}>{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* How it works */}
+            <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem" }}>
+              <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+                <p style={{ margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#5a5755" }}>HOW IT WORKS</p>
+                <h2 style={{ margin: "0 0 3.5rem", fontSize: "clamp(1.6rem, 4vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>Three steps to a short</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0", position: "relative" }}>
+                  {[
+                    { step: "01", title: "Paste a YouTube link", desc: "Any video — podcast, interview, documentary, vlog. EdgeStudio downloads and transcribes it." },
+                    { step: "02", title: "JARVIS finds the moments", desc: "GPT-4o reads the transcript and picks the most engaging clips based on emotion, pacing, and shareability." },
+                    { step: "03", title: "Download and post", desc: "Your clips are cropped to 9:16, captioned, scored, and ready. Download and upload anywhere." },
+                  ].map((s, i) => (
+                    <div key={s.step} style={{ display: "flex", gap: "2rem", alignItems: "flex-start", textAlign: "left", padding: "2rem 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
+                      <span style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent)", opacity: 0.25, flexShrink: 0, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{s.step}</span>
+                      <div>
+                        <h3 style={{ margin: "0 0 0.4rem", fontSize: "1.05rem", fontWeight: 700, color: "#f0ede8" }}>{s.title}</h3>
+                        <p style={{ margin: 0, fontSize: "0.875rem", color: "#5a5755", lineHeight: 1.6 }}>{s.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Final CTA */}
+            <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem", textAlign: "center" }}>
+              <h2 style={{ margin: "0 0 1rem", fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>Ready to clip?</h2>
+              <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#5a5755" }}>Free to use. No credit card. Start in seconds.</p>
               <button
-                key={tab.id}
-                onClick={() => setMode(tab.id)}
-                style={{
-                  display: "flex", flexDirection: "column", alignItems: "center",
-                  padding: "0.85rem 2.5rem", borderRadius: 12, border: "none",
-                  background: mode === tab.id ? "var(--accent)" : "transparent",
-                  color: mode === tab.id ? "#0a0806" : "#6b6568",
-                  cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s",
-                }}
+                onClick={() => setMode("clip")}
+                className="btn-accent"
+                style={{ fontSize: "1rem", padding: "0.9rem 2.5rem", borderRadius: 12 }}
               >
-                <span style={{ fontSize: "1rem", fontWeight: 800, letterSpacing: "-0.01em" }}>{tab.label}</span>
-                <span style={{ fontSize: "0.65rem", fontWeight: 500, marginTop: 2, opacity: 0.7 }}>{tab.desc}</span>
+                ✂ Start Clipping →
               </button>
-            ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* ── Main layout ── */}
+        {/* ══ APP ══ */}
+        {mode && (
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem", display: "grid", gridTemplateColumns: "1fr 280px", gap: "1.5rem" }}>
 
           {/* ── Content area ── */}
@@ -1046,6 +1120,7 @@ export default function App() {
             )}
           </aside>
         </div>
+        )} {/* end mode && */}
       </div>
     </div>
   );
