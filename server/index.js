@@ -69,6 +69,37 @@ app.get("/video/status/:id", (req, res) => {
   res.json(job);
 });
 
+// ── POST /api/jarvis-suggest ─────────────────────────────────────────────────
+// Takes a rough idea and returns a punchy video message
+app.post("/api/jarvis-suggest", async (req, res) => {
+  const { idea } = req.body;
+  if (!idea?.trim()) return res.status(400).json({ error: "idea required" });
+
+  try {
+    const { default: OpenAI } = await import("openai");
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are JARVIS, an AI that writes punchy, cinematic short-form video messages. Given a rough idea, write ONE short, powerful message (max 12 words) that would work as the text overlay on a motivational or viral short video. Bold, direct, no fluff. Return ONLY the message text, nothing else.",
+        },
+        { role: "user", content: idea },
+      ],
+      max_tokens: 60,
+      temperature: 0.85,
+    });
+
+    const message = completion.choices[0]?.message?.content?.trim() || "";
+    res.json({ message });
+  } catch (err) {
+    console.error("jarvis-suggest error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── GET /video/jobs ───────────────────────────────────────────────────────────
 app.get("/video/jobs", (req, res) => {
   const list = [...jobs.values()]

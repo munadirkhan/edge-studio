@@ -11,6 +11,10 @@
     {
       "source": "/health",
       "destination": "https://edge-studio-production.up.railway.app/health"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://edge-studio-production.up.railway.app/api/:path*"
     }
   ]
 }
