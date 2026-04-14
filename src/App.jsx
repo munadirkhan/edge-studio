@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { TEMPLATES } from "./templates";
 import ClipStudio from "./ClipStudio";
-import AuthModal from "./components/AuthModal";
 import { useAuth } from "./contexts/AuthContext";
+import Sidebar from "./components/Sidebar";
+import { TermsModal, PrivacyModal } from "./components/TermsModal";
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -67,8 +68,9 @@ const VOICES = [
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const { user, signOut } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user } = useAuth();
+  const [showTerms,   setShowTerms]   = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   // Top-level mode — null = landing page
   const [mode, setMode] = useState(null); // null | "create" | "clip"
@@ -517,63 +519,23 @@ export default function App() {
   const accentStyle = { color: "var(--accent)" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#060609" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#060609" }}>
 
-      {/* Ambient glow */}
-      <div style={{
-        position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0,
-      }}>
-        <div style={{
-          position: "absolute", top: "-20%", right: "-10%",
-          width: 600, height: 600,
-          background: "radial-gradient(circle, rgba(201,169,110,0.04) 0%, transparent 70%)",
-          borderRadius: "50%",
-        }} />
-        <div style={{
-          position: "absolute", bottom: "-10%", left: "-10%",
-          width: 500, height: 500,
-          background: "radial-gradient(circle, rgba(100,120,200,0.04) 0%, transparent 70%)",
-          borderRadius: "50%",
-        }} />
-      </div>
+      {/* ── Sidebar ── */}
+      <Sidebar mode={mode} setMode={setMode} />
 
-      <div style={{ position: "relative", zIndex: 1 }}>
+      {/* ── Page content ── */}
+      <div style={{ flex: 1, minWidth: 0, overflowY: "auto", position: "relative" }}>
 
-        {/* ── Header ── */}
-        <header style={{
-          borderBottom: "1px solid var(--border)",
-          padding: "1rem 2rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          backdropFilter: "blur(20px)",
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          background: "rgba(6,6,9,0.9)",
-        }}>
-          <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
-            <span style={accentStyle}>Edge</span>
-            <span style={{ color: "#f0ede8" }}>Studio</span>
-          </h1>
+        {/* Ambient glow */}
+        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
+          <div style={{ position: "absolute", top: "-20%", right: "-10%", width: 600, height: 600, background: "radial-gradient(circle, rgba(201,169,110,0.04) 0%, transparent 70%)", borderRadius: "50%" }} />
+        </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
-              <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-              <span style={{ fontSize: "0.65rem", color: "#4a4745", letterSpacing: "0.05em" }}>JARVIS ONLINE</span>
-            </div>
-            {user ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                <span style={{ fontSize: "0.7rem", color: "#5a5755", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
-                <button onClick={signOut} style={{ fontSize: "0.7rem", padding: "0.3rem 0.65rem", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "#5a5755", cursor: "pointer", fontFamily: "inherit" }}>Sign out</button>
-              </div>
-            ) : (
-              <button onClick={() => setShowAuthModal(true)} className="btn-accent" style={{ fontSize: "0.75rem", padding: "0.38rem 0.9rem" }}>Sign in</button>
-            )}
-          </div>
-        </header>
+        <div style={{ position: "relative", zIndex: 1 }}>
 
-        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+        {showTerms   && <TermsModal   onClose={() => setShowTerms(false)} />}
+        {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
 
         {/* ══ LANDING PAGE ══ */}
         {!mode && (
@@ -679,6 +641,10 @@ export default function App() {
               >
                 ✂ Start Clipping →
               </button>
+              <div style={{ marginTop: "3rem", display: "flex", gap: "1.5rem", justifyContent: "center" }}>
+                <button onClick={() => setShowTerms(true)} style={{ background: "none", border: "none", color: "#3a3735", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Terms of Service</button>
+                <button onClick={() => setShowPrivacy(true)} style={{ background: "none", border: "none", color: "#3a3735", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Privacy Policy</button>
+              </div>
             </div>
           </div>
         )}
@@ -1120,7 +1086,9 @@ export default function App() {
             )}
           </aside>
         </div>
-        )} {/* end mode && */}
+        )}
+
+        </div>
       </div>
     </div>
   );
