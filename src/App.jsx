@@ -519,10 +519,10 @@ export default function App() {
   const accentStyle = { color: "var(--accent)" };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#060609" }}>
+    <div style={{ display: "flex", minHeight: "100vh", width: "100%", background: "#060609" }}>
 
-      {/* ── Sidebar — only in app mode ── */}
-      {mode && <Sidebar mode={mode} setMode={setMode} />}
+      {/* ── Sidebar — always visible ── */}
+      <Sidebar mode={mode} setMode={setMode} />
 
       {/* ── Page content ── */}
       <div style={{ flex: 1, minWidth: 0, overflowY: "auto", position: "relative" }}>
@@ -540,60 +540,46 @@ export default function App() {
         {/* ══ LANDING PAGE ══ */}
         {!mode && (
           <div>
-            {/* Minimal landing nav */}
-            <nav style={{ padding: "1.25rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.03em" }}>
-                  <span style={accentStyle}>Edge</span><span style={{ color: "#f0ede8" }}>Studio</span>
-                </span>
-                <span style={{ fontSize: "0.55rem", fontWeight: 700, background: "var(--accent-dim)", border: "1px solid var(--accent-border)", color: "var(--accent)", borderRadius: 5, padding: "0.15rem 0.4rem", letterSpacing: "0.06em" }}>BETA</span>
-              </div>
-              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                <button onClick={() => setMode("clip")} style={{ fontSize: "0.8rem", color: "#5a5755", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Clip</button>
-                <button onClick={() => setMode("create")} style={{ fontSize: "0.8rem", color: "#5a5755", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Create</button>
-                <button onClick={() => setShowTerms(true)} style={{ fontSize: "0.8rem", color: "#5a5755", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Terms</button>
-              </div>
-            </nav>
-
             {/* Hero */}
-            <div style={{ minHeight: "88vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "4rem 1.5rem 3rem", position: "relative", overflow: "hidden" }}>
+            <div style={{ minHeight: "88vh", display: "grid", placeItems: "center", padding: "4rem 2rem 3rem", position: "relative", overflow: "hidden" }}>
               {/* Glow */}
               <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(201,169,110,0.08)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "0.3rem 0.9rem", marginBottom: "1.75rem" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-                <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.08em" }}>JARVIS AI ONLINE</span>
-              </div>
+              <div style={{ textAlign: "center", width: "100%", maxWidth: 900, position: "relative" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(201,169,110,0.08)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "0.3rem 0.9rem", marginBottom: "1.75rem" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
+                  <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.08em" }}>JARVIS AI ONLINE</span>
+                </div>
 
-              <h1 style={{ margin: "0 0 1.25rem", fontSize: "clamp(2.8rem, 7vw, 5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#f0ede8", maxWidth: 860 }}>
-                Create AI videos.<br />Clip anything into<br /><span style={accentStyle}>viral short-form content.</span>
-              </h1>
-              <p style={{ margin: "0 0 3rem", fontSize: "1.05rem", color: "#5a5755", maxWidth: 560, lineHeight: 1.7 }}>
-                Write a prompt and JARVIS generates a cinematic AI video with narration, music-ready visuals, and burned captions — or paste a YouTube link and it finds your best moments, clips to 9:16, and scores each one for viral potential.
-              </p>
+                <h1 style={{ margin: "0 0 1.25rem", fontSize: "clamp(2.8rem, 7vw, 5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#f0ede8" }}>
+                  Create AI videos.<br />Clip anything into<br /><span style={accentStyle}>viral short-form content.</span>
+                </h1>
+                <p style={{ margin: "0 auto 3rem", fontSize: "1.05rem", color: "#5a5755", maxWidth: 560, lineHeight: 1.7 }}>
+                  Write a prompt and JARVIS generates a cinematic AI video with narration, music-ready visuals, and burned captions — or paste a YouTube link and it finds your best moments, clips to 9:16, and scores each one for viral potential.
+                </p>
 
-              {/* CTA buttons */}
-              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "1rem" }}>
-                <button
-                  onClick={() => setMode("clip")}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s", boxShadow: "0 0 30px rgba(201,169,110,0.25)" }}
-                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
-                >
-                  <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✂ Clip a Video</span>
-                  <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>YouTube URL → viral shorts</span>
-                </button>
-                <button
-                  onClick={() => setMode("create")}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
-                >
-                  <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✦ Create a Clip</span>
-                  <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>AI image + voice narration</span>
-                </button>
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "1rem" }}>
+                  <button
+                    onClick={() => setMode("clip")}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s", boxShadow: "0 0 30px rgba(201,169,110,0.25)" }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                  >
+                    <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✂ Clip a Video</span>
+                    <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>YouTube URL → viral shorts</span>
+                  </button>
+                  <button
+                    onClick={() => setMode("create")}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  >
+                    <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✦ Create a Clip</span>
+                    <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>AI image + voice narration</span>
+                  </button>
+                </div>
+                <p style={{ fontSize: "0.72rem", color: "#3a3735" }}>No account needed to start — clips save when signed in</p>
               </div>
-              <p style={{ fontSize: "0.72rem", color: "#3a3735" }}>No account needed to start — clips save when signed in</p>
             </div>
 
             {/* Features */}

@@ -29,7 +29,7 @@ body {
   letter-spacing: -0.005em;
 }
 
-#root { min-height: 100vh; display: flex; }
+#root { min-height: 100vh; width: 100%; display: flex; }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

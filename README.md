@@ -19,8 +19,8 @@ EdgeStudio is a private AI-powered short-form video creation studio for motivati
 ## Local Setup
 1. Install dependencies:
    npm install
-2. Create a .env file with your key:
-   VITE_OPENAI_API_KEY=your_key_here
+2. Create a .env.local file with your key (local-only, not committed):
+   OPENAI_API_KEY=your_key_here
 3. Start development:
    npm run dev
 4. Build production bundle:
