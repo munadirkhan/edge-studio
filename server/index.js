@@ -69,6 +69,119 @@ app.get("/video/status/:id", (req, res) => {
   res.json(job);
 });
 
+// ── POST /api/generate-image ─────────────────────────────────────────────────
+app.post("/api/generate-image", async (req, res) => {
+  const { templateId } = req.body;
+  const TEMPLATE_PROMPTS = {
+    forest:    "Ancient misty forest at dawn, god rays through towering trees, cinematic 9:16 vertical, dark moody atmosphere, photorealistic",
+    ocean:     "Deep underwater ocean scene, bioluminescent creatures, volumetric light beams, cinematic 9:16 vertical, dark blue atmosphere",
+    moonlight: "Full moon over mountain peaks at midnight, dramatic clouds, cinematic 9:16 vertical, dark purple atmospheric sky",
+    sakura:    "Cherry blossom petals falling in slow motion, Japanese temple background, cinematic 9:16 vertical, soft pink moody light",
+    city:      "Aerial view of city at night, neon reflections on wet streets, cinematic 9:16 vertical, golden and amber tones",
+    gym:       "Dark gym with dramatic spotlight, iron weights, cinematic 9:16 vertical, high contrast, gritty motivational atmosphere",
+  };
+  const prompt = TEMPLATE_PROMPTS[templateId] || TEMPLATE_PROMPTS.city;
+  try {
+    const { default: OpenAI } = await import("openai");
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt,
+      n: 1,
+      size: "1024x1792",
+      response_format: "b64_json",
+    });
+    const image = `data:image/png;base64,${response.data[0].b64_json}`;
+    res.json({ image });
+  } catch (err) {
+    console.error("generate-image error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/generate-caption ───────────────────────────────────────────────
+app.post("/api/generate-caption", async (req, res) => {
+  const { message } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: "message required" });
+  try {
+    const { default: OpenAI } = await import("openai");
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a viral short-form content expert. Given a message/theme, return JSON with:
+- hook: a 6-10 word punchy opening line for the video overlay (ALL CAPS style, bold statement)
+- caption: a 2-3 sentence TikTok/Reels caption with emojis
+- hashtags: 8-10 relevant hashtags as a single string`,
+        },
+        { role: "user", content: message },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 300,
+      temperature: 0.8,
+    });
+    const data = JSON.parse(completion.choices[0].message.content);
+    res.json(data);
+  } catch (err) {
+    console.error("generate-caption error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/generate-narration ─────────────────────────────────────────────
+app.post("/api/generate-narration", async (req, res) => {
+  const { message, hook, clipDuration = 30 } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: "message required" });
+  try {
+    const { default: OpenAI } = await import("openai");
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const words = Math.round(clipDuration * 2.5); // ~2.5 words/sec for narration pace
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `Write a spoken narration script for a ${clipDuration}-second motivational short video. Around ${words} words. Direct, powerful, cinematic delivery. No stage directions. Just the words to be spoken.`,
+        },
+        { role: "user", content: `Theme: ${message}\nOpening hook: ${hook}` },
+      ],
+      max_tokens: 200,
+      temperature: 0.75,
+    });
+    res.json({ script: completion.choices[0].message.content.trim() });
+  } catch (err) {
+    console.error("generate-narration error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/generate-voice ─────────────────────────────────────────────────
+app.post("/api/generate-voice", async (req, res) => {
+  const { text, voice = "onyx" } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: "text required" });
+  const VALID_VOICES = ["onyx", "fable", "echo", "nova", "shimmer", "alloy"];
+  const safeVoice = VALID_VOICES.includes(voice) ? voice : "onyx";
+  try {
+    const { default: OpenAI } = await import("openai");
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: safeVoice,
+      input: text,
+      response_format: "mp3",
+    });
+    const buffer = Buffer.from(await mp3.arrayBuffer());
+    res.set("Content-Type", "audio/mpeg");
+    res.set("Content-Length", buffer.length);
+    res.send(buffer);
+  } catch (err) {
+    console.error("generate-voice error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── POST /api/jarvis-suggest ─────────────────────────────────────────────────
 // Takes a rough idea and returns a punchy video message
 app.post("/api/jarvis-suggest", async (req, res) => {
@@ -101,7 +214,7 @@ app.post("/api/jarvis-suggest", async (req, res) => {
 });
 
 // ── GET /video/jobs ───────────────────────────────────────────────────────────
-app.get("/video/jobs", (req, res) => {
+app.get("/video/jobs", (_req, res) => {
   const list = [...jobs.values()]
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 20);
@@ -216,11 +329,23 @@ async function runPipeline(job, { url, clipCount, clipDuration, fontKey = "impac
     job.stage = "Complete";
     console.log(`[pipeline:${jobId}] Done. ${clips.length} clips ready.`);
 
+    // Clean up uploads (source video + audio) — outputs stay for download
+    fs.rm(jobUploads, { recursive: true, force: true }, () => {});
+
   } catch (err) {
     job.status = "failed";
     job.stage = "Failed";
     job.error = err.message;
     console.error(`[pipeline:${jobId}] Error:`, err);
+    // Clean up both dirs on failure
+    fs.rm(jobUploads, { recursive: true, force: true }, () => {});
+    fs.rm(jobOutputs, { recursive: true, force: true }, () => {});
+  }
+
+  // Keep jobs map lean — drop entries older than 2 hours
+  const TWO_HOURS = 2 * 60 * 60 * 1000;
+  for (const [id, j] of jobs.entries()) {
+    if (Date.now() - j.createdAt > TWO_HOURS) jobs.delete(id);
   }
 }
 

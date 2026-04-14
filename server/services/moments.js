@@ -53,16 +53,18 @@ Return EXACTLY this JSON (no markdown, no explanation):
   });
 
   const raw = completion.choices[0].message.content;
-  const parsed = JSON.parse(raw);
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch { throw new Error("GPT returned invalid JSON for viral moments"); }
 
   // Validate and clamp timestamps
-  return (parsed.clips || []).map((clip) => ({
-    ...clip,
-    start: Math.max(0, Math.round(clip.start)),
-    end: Math.min(videoDuration, Math.round(clip.end)),
-    duration: Math.round(clip.end) - Math.max(0, Math.round(clip.start)),
-    viralScore: Math.min(100, Math.max(0, Math.round(clip.viralScore || 70))),
-  }));
+  return (parsed.clips || [])
+    .map((clip) => {
+      const start = Math.max(0, Math.round(clip.start));
+      const end   = Math.min(videoDuration, Math.round(clip.end));
+      return { ...clip, start, end, duration: end - start, viralScore: Math.min(100, Math.max(0, Math.round(clip.viralScore || 70))) };
+    })
+    .filter((clip) => clip.duration > 0);
 }
 
 function fmt(seconds) {
