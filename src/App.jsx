@@ -521,8 +521,8 @@ export default function App() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#060609" }}>
 
-      {/* ── Sidebar ── */}
-      <Sidebar mode={mode} setMode={setMode} />
+      {/* ── Sidebar — only in app mode ── */}
+      {mode && <Sidebar mode={mode} setMode={setMode} />}
 
       {/* ── Page content ── */}
       <div style={{ flex: 1, minWidth: 0, overflowY: "auto", position: "relative" }}>
@@ -540,21 +540,36 @@ export default function App() {
         {/* ══ LANDING PAGE ══ */}
         {!mode && (
           <div>
+            {/* Minimal landing nav */}
+            <nav style={{ padding: "1.25rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.03em" }}>
+                  <span style={accentStyle}>Edge</span><span style={{ color: "#f0ede8" }}>Studio</span>
+                </span>
+                <span style={{ fontSize: "0.55rem", fontWeight: 700, background: "var(--accent-dim)", border: "1px solid var(--accent-border)", color: "var(--accent)", borderRadius: 5, padding: "0.15rem 0.4rem", letterSpacing: "0.06em" }}>BETA</span>
+              </div>
+              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <button onClick={() => setMode("clip")} style={{ fontSize: "0.8rem", color: "#5a5755", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Clip</button>
+                <button onClick={() => setMode("create")} style={{ fontSize: "0.8rem", color: "#5a5755", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Create</button>
+                <button onClick={() => setShowTerms(true)} style={{ fontSize: "0.8rem", color: "#5a5755", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Terms</button>
+              </div>
+            </nav>
+
             {/* Hero */}
             <div style={{ minHeight: "88vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "4rem 1.5rem 3rem", position: "relative", overflow: "hidden" }}>
               {/* Glow */}
-              <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,169,110,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
 
               <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(201,169,110,0.08)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "0.3rem 0.9rem", marginBottom: "1.75rem" }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
                 <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.08em" }}>JARVIS AI ONLINE</span>
               </div>
 
-              <h1 style={{ margin: "0 0 1.25rem", fontSize: "clamp(2.8rem, 7vw, 5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#f0ede8", maxWidth: 800 }}>
-                Turn any video into<br /><span style={accentStyle}>viral short-form content</span>
+              <h1 style={{ margin: "0 0 1.25rem", fontSize: "clamp(2.8rem, 7vw, 5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#f0ede8", maxWidth: 860 }}>
+                Create AI videos.<br />Clip anything into<br /><span style={accentStyle}>viral short-form content.</span>
               </h1>
-              <p style={{ margin: "0 0 3rem", fontSize: "1.1rem", color: "#5a5755", maxWidth: 520, lineHeight: 1.65 }}>
-                Paste a YouTube link and EdgeStudio finds your best moments, clips them to 9:16, burns captions, and scores their viral potential — automatically.
+              <p style={{ margin: "0 0 3rem", fontSize: "1.05rem", color: "#5a5755", maxWidth: 560, lineHeight: 1.7 }}>
+                Write a prompt and JARVIS generates a cinematic AI video with narration, music-ready visuals, and burned captions — or paste a YouTube link and it finds your best moments, clips to 9:16, and scores each one for viral potential.
               </p>
 
               {/* CTA buttons */}
@@ -590,11 +605,11 @@ export default function App() {
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem" }}>
                   {[
-                    { icon: "✂", title: "Auto Clip Finding", desc: "Drop a YouTube URL. Our AI watches the whole video, finds the most engaging moments, and scores each one for viral potential." },
-                    { icon: "⚡", title: "Viral Score Engine", desc: "Every clip gets scored 0-100 based on emotional hooks, surprise factor, shareability, and engagement patterns." },
-                    { icon: "💬", title: "Caption Burn", desc: "Whisper AI transcribes your clips with timestamp precision, then captions are burned directly into the video — no editing needed." },
-                    { icon: "🎙", title: "AI Narration", desc: "Pick a voice and EdgeStudio writes + records a full voiceover script timed perfectly to your clip length." },
-                    { icon: "🎨", title: "Visual Templates", desc: "Six cinematic backgrounds — forest, ocean, moonlight, sakura, city, gym — generated by DALL-E 3 for every clip." },
+                    { icon: "✦", title: "AI Video Creator", desc: "Write a prompt — JARVIS generates a cinematic background with DALL-E 3, writes a full voiceover script, and records it with a deep AI voice. One click." },
+                    { icon: "✂", title: "YouTube → Shorts", desc: "Paste any YouTube URL. EdgeStudio downloads, transcribes, and finds your most engaging moments automatically." },
+                    { icon: "⚡", title: "Viral Score Engine", desc: "Every clip gets scored 0-100 based on emotional hooks, surprise factor, shareability, and engagement patterns from GPT-4o." },
+                    { icon: "💬", title: "Caption Burn", desc: "Whisper AI transcribes with timestamp precision. Captions are burned directly into the video — no editing needed." },
+                    { icon: "🎙", title: "6 AI Voices", desc: "Choose from Onyx, Fable, Echo, Nova, Shimmer, and Alloy. JARVIS writes the script and records it at the perfect pace." },
                     { icon: "📱", title: "9:16 Ready", desc: "Every clip is auto-cropped to vertical format, ready to upload directly to TikTok, Instagram Reels, or YouTube Shorts." },
                   ].map((f) => (
                     <div key={f.title} className="glass-card" style={{ padding: "1.5rem" }}>
