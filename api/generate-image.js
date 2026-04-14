@@ -3,11 +3,17 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const PROMPTS = {
-  night_sky: "A breathtaking starry night sky over vast desert sand dunes, deep navy blue atmosphere, hundreds of bright stars and a glowing moon, golden light on sand, rich and detailed, no people",
-  desert_dawn: "Golden sunrise over layered desert sand dunes, warm amber and orange light rays, rich texture in sand, atmospheric depth, beautiful and detailed, no people",
-  geometric: "Moody geometric neon pattern with cinematic lighting, premium abstract texture, vertical 9:16 framing, no text, no logos",
-  garden: "Lush peaceful garden with flowing water fountain, green plants and white flowers, golden sunlight filtering through leaves, serene and beautiful, no people",
-  architecture: "Grand cinematic architecture interior with dramatic shadows, warm highlights, luxury texture, vertical 9:16 framing, no people, no text",
+  forest:
+    "Ancient towering redwood forest shrouded in thick morning mist, shafts of golden light piercing through a dense canopy, deep emerald shadows, cinematic depth, moody and powerful atmosphere, vertical 9:16 framing, no people, no text",
+  ocean:
+    "Massive storm waves crashing against dark sea cliffs at dusk, dramatic sky with deep navy and charcoal clouds, foam and spray catching last light, raw and cinematic power, vertical 9:16 framing, no people, no text",
+  moonlight:
+    "Full moon rising behind dramatic mountain silhouettes, ethereal silver and indigo light spilling across low clouds, deep star-filled sky, breathtaking and cinematic, long exposure quality, vertical 9:16 framing, no people, no text",
+  sakura:
+    "Cherry blossom branches in full bloom at night against a dark indigo sky, soft pink petals drifting, moonlight casting dramatic shadows, cinematic beauty and melancholy, vertical 9:16 framing, no people, no text",
+  city:
+    "Aerial city skyline at night with dramatic light trails below, towering glass skyscrapers reflecting neon glow, deep shadows and premium cinematic quality, powerful urban atmosphere, vertical 9:16 framing, no people, no text",
+  gym: "Dramatic empty professional gym, heavy iron barbells and plates under a single spotlight, dark concrete walls with steam, raw power and focus, cinematic shadows and contrast, vertical 9:16 framing, no people, no text",
 };
 
 export default async function handler(req, res) {
@@ -25,7 +31,7 @@ export default async function handler(req, res) {
   try {
     const imgRes = await openai.images.generate({
       model: "dall-e-3",
-      prompt: prompt,
+      prompt,
       n: 1,
       size: "1024x1792",
       quality: "standard",
@@ -33,14 +39,13 @@ export default async function handler(req, res) {
     });
 
     const b64 = imgRes.data[0].b64_json;
-
     if (!b64) {
-      return res.status(500).json({ error: "DALL-E returned no image data" });
+      return res.status(500).json({ error: "No image data returned" });
     }
 
     return res.status(200).json({ image: "data:image/png;base64," + b64 });
   } catch (err) {
-    console.error("DALL-E error:", err);
+    console.error("Image generation error:", err);
     return res.status(500).json({ error: err.message });
   }
-} 
+}

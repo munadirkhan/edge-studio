@@ -7,9 +7,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { translation, quote, reference, ayah, surah } = req.body;
+  const { message } = req.body;
 
-  if (!translation && !quote && !ayah) {
+  if (!String(message || "").trim()) {
     return res.status(400).json({ error: "No message provided" });
   }
 
@@ -19,18 +19,18 @@ export default async function handler(req, res) {
       messages: [
         {
           role: "system",
-          content: "You are a social media assistant for motivational creators. Write high-retention, impactful short-form content for TikTok and Instagram Reels.",
+          content:
+            "You are a social media strategist for motivational creators. Write high-retention, cinematic short-form content for TikTok and Instagram Reels. Be direct, raw, and impactful.",
         },
         {
           role: "user",
           content: `Generate social media content for this message:
 
-Message: "${translation || quote || ayah}"
-Reference: ${reference || surah || "EdgeStudio Draft"}
+"${String(message).trim()}"
 
-Return EXACTLY this format with these exact labels:
-HOOK: [one punchy opening sentence under 12 words that stops the scroll]
-CAPTION: [2-3 sentences of sincere reflection, direct, high-impact tone]
+Return EXACTLY this format:
+HOOK: [one punchy opening line under 12 words that stops the scroll]
+CAPTION: [2-3 sentences, direct and high-impact, no fluff]
 HASHTAGS: [8 relevant hashtags separated by spaces]`,
         },
       ],
@@ -52,4 +52,3 @@ HASHTAGS: [8 relevant hashtags separated by spaces]`,
     return res.status(500).json({ error: err.message });
   }
 }
-
