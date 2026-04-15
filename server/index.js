@@ -7,6 +7,7 @@ import cors from "cors";
 import fs from "fs";
 import { v4 as uuid } from "uuid";
 
+import multer from "multer";
 import { downloadVideo, getVideoInfo } from "./services/downloader.js";
 import { extractAudio, transcribeAudio } from "./services/transcriber.js";
 import { findViralMoments } from "./services/moments.js";
@@ -57,6 +58,55 @@ app.post("/video/process", async (req, res) => {
   // Run pipeline async
   runPipeline(job, { url, clipCount, clipDuration, fontKey }).catch((err) => {
     console.error(`[pipeline] Job ${jobId} failed:`, err.message);
+    job.status = "failed";
+    job.error = err.message;
+  });
+});
+
+// ── POST /video/upload ────────────────────────────────────────────────────────
+// Upload a local video file instead of downloading from YouTube
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, _file, cb) => {
+      const jobId = req.jobId;
+      const dir = path.join(UPLOADS_DIR, jobId);
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, _file, cb) => cb(null, `${req.jobId}.mp4`),
+  }),
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB max
+  fileFilter: (_req, f, cb) => {
+    if (f.mimetype.startsWith("video/")) cb(null, true);
+    else cb(new Error("Only video files allowed"));
+  },
+});
+
+app.post("/video/upload", (req, res, next) => {
+  const jobId = uuid();
+  req.jobId = jobId;
+  next();
+}, upload.single("video"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No video file received" });
+
+  const { clipCount = 3, clipDuration = 60, fontKey = "impact" } = req.body;
+  const videoPath = req.file.path;
+  const jobId = req.jobId;
+
+  const job = {
+    id: jobId,
+    status: "queued",
+    stage: "Starting...",
+    url: req.file.originalname,
+    clips: [],
+    error: null,
+    createdAt: Date.now(),
+  };
+  jobs.set(jobId, job);
+  res.json({ jobId });
+
+  // Run pipeline starting from transcription (skip download)
+  runPipelineFromFile(job, { videoPath, clipCount: Number(clipCount), clipDuration: Number(clipDuration), fontKey }).catch((err) => {
     job.status = "failed";
     job.error = err.message;
   });
@@ -343,6 +393,79 @@ async function runPipeline(job, { url, clipCount, clipDuration, fontKey = "impac
   }
 
   // Keep jobs map lean — drop entries older than 2 hours
+  const TWO_HOURS = 2 * 60 * 60 * 1000;
+  for (const [id, j] of jobs.entries()) {
+    if (Date.now() - j.createdAt > TWO_HOURS) jobs.delete(id);
+  }
+}
+
+// Same as runPipeline but skips the download step (file already on disk)
+async function runPipelineFromFile(job, { videoPath, clipCount, clipDuration, fontKey = "impact" }) {
+  const { id: jobId } = job;
+  const jobOutputs = path.join(OUTPUTS_DIR, jobId);
+  fs.mkdirSync(jobOutputs, { recursive: true });
+
+  try {
+    job.status = "running";
+
+    job.stage = "Extracting audio...";
+    const jobUploads = path.dirname(videoPath);
+    const audioPath = await extractAudio(videoPath, jobUploads, jobId);
+
+    job.stage = "Transcribing with Whisper...";
+    const transcription = await transcribeAudio(audioPath);
+    const videoDuration = transcription.segments?.slice(-1)[0]?.end ?? 600;
+
+    job.stage = "Finding viral moments...";
+    const moments = await findViralMoments(transcription, videoDuration, clipCount, clipDuration);
+
+    job.stage = "Creating clips...";
+    const clips = [];
+
+    for (const moment of moments) {
+      job.stage = `Creating clip ${moment.rank} of ${moments.length}...`;
+      const rawClipPath = await createClip({ videoPath, start: moment.start, end: moment.end, outputDir: jobOutputs, jobId, rank: moment.rank });
+
+      const srtContent = buildSRT(transcription.segments || [], moment.start, moment.end);
+      const srtPath = path.join(jobOutputs, `${jobId}_clip${moment.rank}.srt`);
+      fs.writeFileSync(srtPath, srtContent, "utf8");
+
+      let finalClipPath = rawClipPath;
+      if (srtContent.trim()) {
+        const captionedPath = rawClipPath.replace(".mp4", "_captioned.mp4");
+        try { await addCaptions({ videoPath: rawClipPath, srtPath, outputPath: captionedPath, fontKey }); finalClipPath = captionedPath; }
+        catch (e) { console.warn(`[upload-pipeline] caption failed:`, e.message); }
+      }
+
+      const thumbPath = path.join(jobOutputs, `${jobId}_clip${moment.rank}_thumb.jpg`);
+      try { await generateThumbnail({ videoPath, start: moment.start, end: moment.end, outputPath: thumbPath }); } catch {}
+
+      clips.push({
+        rank: moment.rank,
+        viralScore: moment.viralScore,
+        title: moment.title,
+        hook: moment.hook,
+        reason: moment.reason,
+        caption: moment.caption,
+        start: moment.start,
+        end: moment.end,
+        duration: moment.duration,
+        downloadUrl: `/clips/${jobId}/${path.basename(finalClipPath)}`,
+        thumbnailUrl: fs.existsSync(thumbPath) ? `/clips/${jobId}/${path.basename(thumbPath)}` : null,
+      });
+    }
+
+    job.clips = clips;
+    job.status = "done";
+    job.stage = "Complete";
+    fs.rm(jobUploads, { recursive: true, force: true }, () => {});
+  } catch (err) {
+    job.status = "failed";
+    job.stage = "Failed";
+    job.error = err.message;
+    console.error(`[upload-pipeline:${jobId}] Error:`, err);
+  }
+
   const TWO_HOURS = 2 * 60 * 60 * 1000;
   for (const [id, j] of jobs.entries()) {
     if (Date.now() - j.createdAt > TWO_HOURS) jobs.delete(id);

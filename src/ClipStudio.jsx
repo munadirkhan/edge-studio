@@ -42,7 +42,10 @@ function stageToPercent(stage = "") {
 }
 
 export default function ClipStudio() {
+  const [inputMode, setInputMode]   = useState("url"); // "url" | "upload"
   const [url, setUrl]               = useState("");
+  const [uploadFile, setUploadFile] = useState(null);
+  const [dragOver, setDragOver]     = useState(false);
   const [clipCount, setClipCount]   = useState(3);
   const [clipLength, setClipLength] = useState(60);
   const [fontKey, setFontKey]       = useState("impact");
@@ -50,8 +53,10 @@ export default function ClipStudio() {
   const [job, setJob]               = useState(null);
   const [error, setError]           = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [sortBy, setSortBy]         = useState("score"); // "score" | "time"
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [sortBy, setSortBy]         = useState("score");
   const [playingClip, setPlayingClip] = useState(null);
+  const fileInputRef = useRef(null);
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -72,27 +77,71 @@ export default function ClipStudio() {
   }, [jobId]);
 
   async function handleSubmit() {
-    if (!url.trim() || submitting) return;
+    if (submitting) return;
+    if (inputMode === "url" && !url.trim()) return;
+    if (inputMode === "upload" && !uploadFile) return;
+
     setError("");
     setJob(null);
     setJobId(null);
     setPlayingClip(null);
+    setUploadProgress(0);
     setSubmitting(true);
+
     try {
-      const res  = await fetch("/video/process", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), clipCount, clipDuration: clipLength, fontKey }),
-      });
       let data;
-      try { data = await res.json(); } catch { throw new Error("Backend unavailable — run: cd server && node index.js"); }
-      if (!res.ok) throw new Error(data.error || "Failed to start");
+
+      if (inputMode === "upload") {
+        const formData = new FormData();
+        formData.append("video", uploadFile);
+        formData.append("clipCount", clipCount);
+        formData.append("clipDuration", clipLength);
+        formData.append("fontKey", fontKey);
+
+        // Use XHR so we can track upload progress
+        data = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/video/upload");
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+          };
+          xhr.onload = () => {
+            try { resolve(JSON.parse(xhr.responseText)); }
+            catch { reject(new Error("Backend unavailable")); }
+          };
+          xhr.onerror = () => reject(new Error("Upload failed — check your connection"));
+          xhr.send(formData);
+        });
+      } else {
+        const res = await fetch("/video/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url.trim(), clipCount, clipDuration: clipLength, fontKey }),
+        });
+        try { data = await res.json(); } catch { throw new Error("Backend unavailable"); }
+        if (!res.ok) throw new Error(data.error || "Failed to start");
+      }
+
+      if (data.error) throw new Error(data.error);
       setJobId(data.jobId);
       setJob({ status: "queued", stage: "Starting...", clips: [] });
     } catch (err) {
       setError(err.message);
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
+    }
+  }
+
+  function handleFileDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0] || e.target.files?.[0];
+    if (file && file.type.startsWith("video/")) {
+      setUploadFile(file);
+      setError("");
+    } else {
+      setError("Please drop a video file (mp4, mov, etc.)");
     }
   }
 
@@ -121,24 +170,95 @@ export default function ClipStudio() {
           )}
         </div>
 
-        <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1rem" }}>
-          <input
-            className="input-base"
-            style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", flex: 1 }}
-            placeholder="Paste YouTube URL..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          />
-          <button
-            className="btn-accent"
-            style={{ padding: "0.75rem 1.25rem", fontSize: "0.85rem", flexShrink: 0 }}
-            onClick={handleSubmit}
-            disabled={!url.trim() || submitting || isRunning}
-          >
-            {submitting || isRunning ? "Processing..." : "Process →"}
-          </button>
+        {/* Toggle */}
+        <div style={{ display: "flex", marginBottom: "1rem", background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: 3, width: "fit-content" }}>
+          {[["url", "YouTube URL"], ["upload", "Upload Video"]].map(([mode, label]) => (
+            <button
+              key={mode}
+              onClick={() => { setInputMode(mode); setError(""); }}
+              style={{
+                padding: "0.45rem 1rem", borderRadius: 8, border: "none", cursor: "pointer",
+                fontFamily: "inherit", fontSize: "0.78rem", fontWeight: 600, transition: "all 0.15s",
+                background: inputMode === mode ? "var(--accent-dim)" : "transparent",
+                color: inputMode === mode ? "var(--accent)" : "#5a5755",
+                outline: inputMode === mode ? "1px solid var(--accent-border)" : "none",
+              }}
+            >{label}</button>
+          ))}
         </div>
+
+        {/* URL input */}
+        {inputMode === "url" && (
+          <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1rem" }}>
+            <input
+              className="input-base"
+              style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", flex: 1 }}
+              placeholder="Paste YouTube URL..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            />
+            <button
+              className="btn-accent"
+              style={{ padding: "0.75rem 1.25rem", fontSize: "0.85rem", flexShrink: 0 }}
+              onClick={handleSubmit}
+              disabled={!url.trim() || submitting || isRunning}
+            >
+              {submitting || isRunning ? "Processing..." : "Process →"}
+            </button>
+          </div>
+        )}
+
+        {/* File upload */}
+        {inputMode === "upload" && (
+          <div style={{ marginBottom: "1rem" }}>
+            <input ref={fileInputRef} type="file" accept="video/*" style={{ display: "none" }} onChange={handleFileDrop} />
+            <div
+              onClick={() => !uploadFile && fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleFileDrop}
+              style={{
+                border: `2px dashed ${dragOver ? "var(--accent)" : uploadFile ? "rgba(74,222,128,0.4)" : "var(--border)"}`,
+                borderRadius: 12, padding: "1.5rem", textAlign: "center",
+                background: dragOver ? "var(--accent-dim)" : uploadFile ? "rgba(74,222,128,0.05)" : "rgba(255,255,255,0.02)",
+                cursor: uploadFile ? "default" : "pointer", transition: "all 0.15s", marginBottom: "0.75rem",
+              }}
+            >
+              {uploadFile ? (
+                <div>
+                  <p style={{ margin: "0 0 0.35rem", fontSize: "0.85rem", fontWeight: 600, color: "#4ade80" }}>✓ {uploadFile.name}</p>
+                  <p style={{ margin: 0, fontSize: "0.7rem", color: "#5a5755" }}>{(uploadFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setUploadFile(null); }}
+                    style={{ marginTop: "0.5rem", fontSize: "0.7rem", color: "#f87171", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
+                  >Remove</button>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ margin: "0 0 0.35rem", fontSize: "0.85rem", color: "#5a5755" }}>Drop a video file here</p>
+                  <p style={{ margin: 0, fontSize: "0.7rem", color: "#3a3735" }}>or click to browse — mp4, mov, webm</p>
+                </div>
+              )}
+            </div>
+            {submitting && uploadProgress > 0 && uploadProgress < 100 && (
+              <div>
+                <div className="progress-bar" style={{ marginBottom: "0.35rem" }}>
+                  <div className="progress-fill" style={{ width: `${uploadProgress}%` }} />
+                </div>
+                <p style={{ margin: 0, fontSize: "0.68rem", color: "#5a5755" }}>Uploading... {uploadProgress}%</p>
+              </div>
+            )}
+            <button
+              className="btn-accent"
+              style={{ width: "100%", padding: "0.75rem", fontSize: "0.85rem" }}
+              onClick={handleSubmit}
+              disabled={!uploadFile || submitting || isRunning}
+            >
+              {submitting || isRunning ? "Processing..." : "Process Video →"}
+            </button>
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
           <div>

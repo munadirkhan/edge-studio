@@ -15,6 +15,14 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
       '/dalle-proxy': {
         target: 'https://oaidalleapiprodscus.blob.core.windows.net',
         changeOrigin: true,
