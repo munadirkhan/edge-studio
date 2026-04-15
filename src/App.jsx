@@ -57,12 +57,12 @@ const MOTION_INTENSITIES = [
 ];
 
 const VOICES = [
-  { id: "onyx",    label: "Onyx — deep, US"         },
-  { id: "fable",   label: "Fable — deep, British"   },
-  { id: "echo",    label: "Echo — warm"             },
-  { id: "nova",    label: "Nova — clear"            },
-  { id: "shimmer", label: "Shimmer — bright"        },
-  { id: "alloy",   label: "Alloy — neutral"         },
+  { id: "nova",    label: "Nova",    desc: "calm · clear · focused"    },
+  { id: "shimmer", label: "Shimmer", desc: "soft · warm · soothing"    },
+  { id: "echo",    label: "Echo",    desc: "smooth · measured · gentle" },
+  { id: "fable",   label: "Fable",   desc: "British · rich · narrative" },
+  { id: "onyx",    label: "Onyx",    desc: "deep · powerful · US"      },
+  { id: "alloy",   label: "Alloy",   desc: "neutral · clean · balanced" },
 ];
 
 // ─── App ──────────────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export default function App() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [motionEffect, setMotionEffect]         = useState("zoom");
   const [motionIntensity, setMotionIntensity]   = useState("cinematic");
-  const [selectedVoice, setSelectedVoice]       = useState("onyx");
+  const [selectedVoice, setSelectedVoice]       = useState("nova");
 
   // Generation
   const [generating, setGenerating]         = useState(false);
@@ -104,8 +104,9 @@ export default function App() {
   const [hashtags, setHashtags] = useState("");
 
   // Voice narration
-  const [voiceBuffer, setVoiceBuffer] = useState(null);
-  const [voiceStatus, setVoiceStatus] = useState("");
+  const [voiceBuffer, setVoiceBuffer]         = useState(null);
+  const [voiceStatus, setVoiceStatus]         = useState("");
+  const [narrationScript, setNarrationScript] = useState("");
 
   // Export
   const [exportStatus, setExportStatus]     = useState("");
@@ -122,7 +123,7 @@ export default function App() {
     if (step >= 3 && selectedTemplate && bgImageEl) drawCanvasFrame();
   }, [step, selectedTemplate, bgImageEl, userMessage, hook, motionEffect, motionIntensity, showTextOverlay]);
 
-  function drawCanvasFrame(elapsedMs = 0, durationMs = 0) {
+  function drawCanvasFrame(elapsedMs = 0, durationMs = 0, captionWords = null) {
     const canvas = canvasRef.current;
     if (!canvas || !selectedTemplate) return;
 
@@ -172,72 +173,79 @@ export default function App() {
       ctx.fillRect(0, 0, W, H);
     }
 
-    // ── Text overlay (hook text, vertically centered) ──────────
+    // ── Text overlay ──────────────────────────────────────────────
     if (showTextOverlay) {
-      // Use hook when available (short + punchy), fall back to trimmed message
-      const displayText = hook || userMessage || "Your message here";
-
-      // Dynamic font size: bigger when fewer words
-      const wordCount = displayText.split(" ").length;
-      const fontSize = wordCount <= 6 ? 110 : wordCount <= 10 ? 90 : 76;
-      const lineHeight = fontSize * 1.28;
-      const maxWidth = W - 200;
-
-      ctx.font = `900 ${fontSize}px 'Cinzel', 'Georgia', serif`;
       ctx.textAlign = "center";
 
-      // Measure and wrap lines
-      const words = displayText.split(" ");
-      let tempLine = "", measuredLines = [];
-      for (const word of words) {
-        const test = tempLine + word + " ";
-        if (ctx.measureText(test).width > maxWidth && tempLine !== "") {
-          measuredLines.push(tempLine.trim());
-          tempLine = word + " ";
-        } else {
-          tempLine = test;
+      if (captionWords && captionWords.length > 0 && durationMs > 0) {
+        // ── Word-by-word synced captions (export mode) ──
+        const msPerWord = durationMs / captionWords.length;
+        const wordIdx   = Math.floor(elapsedMs / msPerWord);
+        // Show 2 words at a time, grouped
+        const groupIdx  = Math.floor(wordIdx / 2);
+        const w1 = captionWords[groupIdx * 2]     || "";
+        const w2 = captionWords[groupIdx * 2 + 1] || "";
+        const lines = [w1, w2].filter(Boolean);
+
+        const fontSize   = 120;
+        const lineHeight = fontSize * 1.18;
+        const totalH     = lines.length * lineHeight;
+        const startY     = H * 0.5 - totalH / 2 + fontSize * 0.78;
+
+        lines.forEach((word, i) => {
+          const y = startY + i * lineHeight;
+          const isCurrentWord = groupIdx * 2 + i === wordIdx;
+
+          // Black stroke outline
+          ctx.font = `900 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
+          ctx.lineWidth = 14;
+          ctx.strokeStyle = "rgba(0,0,0,0.95)";
+          ctx.lineJoin = "round";
+          ctx.strokeText(word.toUpperCase(), W / 2, y);
+
+          // Fill — current word gets accent highlight
+          ctx.fillStyle = isCurrentWord ? T.accentColor : "#ffffff";
+          ctx.shadowColor = "rgba(0,0,0,0.6)";
+          ctx.shadowBlur  = 12;
+          ctx.fillText(word.toUpperCase(), W / 2, y);
+          ctx.shadowBlur  = 0;
+        });
+
+      } else {
+        // ── Static hook preview (non-export mode) ──
+        const displayText = hook || userMessage || "Your message here";
+        const words = displayText.split(" ");
+        const fontSize   = words.length <= 4 ? 120 : words.length <= 7 ? 96 : 78;
+        const lineHeight = fontSize * 1.22;
+        const maxWidth   = W - 160;
+
+        ctx.font = `900 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
+        let tempLine = "", lines = [];
+        for (const w of words) {
+          const test = tempLine + w + " ";
+          if (ctx.measureText(test).width > maxWidth && tempLine) {
+            lines.push(tempLine.trim()); tempLine = w + " ";
+          } else { tempLine = test; }
         }
+        lines.push(tempLine.trim());
+
+        const totalH = lines.length * lineHeight;
+        const startY = H * 0.5 - totalH / 2 + fontSize * 0.78;
+
+        lines.forEach((line, i) => {
+          const y = startY + i * lineHeight;
+          ctx.font        = `900 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
+          ctx.lineWidth   = 12;
+          ctx.strokeStyle = "rgba(0,0,0,0.95)";
+          ctx.lineJoin    = "round";
+          ctx.strokeText(line.toUpperCase(), W / 2, y);
+          ctx.fillStyle   = "#ffffff";
+          ctx.shadowColor = "rgba(0,0,0,0.7)";
+          ctx.shadowBlur  = 16;
+          ctx.fillText(line.toUpperCase(), W / 2, y);
+          ctx.shadowBlur  = 0;
+        });
       }
-      measuredLines.push(tempLine.trim());
-
-      const blockH = measuredLines.length * lineHeight;
-      const centerY = H * 0.5;
-      const startY = centerY - blockH / 2 + fontSize * 0.78;
-
-      // Soft dark backdrop behind text block
-      const padX = 80, padY = 40;
-      ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.beginPath();
-      ctx.roundRect(W / 2 - maxWidth / 2 - padX, startY - fontSize - padY, maxWidth + padX * 2, blockH + padY * 2, 18);
-      ctx.fill();
-
-      // Thin accent rule above
-      ctx.fillStyle = T.accentColor;
-      ctx.globalAlpha = 0.8;
-      ctx.fillRect(W / 2 - 48, startY - fontSize - padY + 10, 96, 2);
-      ctx.globalAlpha = 1;
-
-      // Text with layered shadow for depth
-      ctx.textAlign = "center";
-      measuredLines.forEach((line, i) => {
-        const y = startY + i * lineHeight;
-        // Hard shadow
-        ctx.fillStyle = "rgba(0,0,0,0.9)";
-        ctx.shadowColor = "transparent";
-        ctx.fillText(line, W / 2 + 3, y + 3);
-        // Soft glow
-        ctx.fillStyle = T.textColor;
-        ctx.shadowColor = "rgba(0,0,0,0.8)";
-        ctx.shadowBlur = 28;
-        ctx.fillText(line, W / 2, y);
-        ctx.shadowBlur = 0;
-      });
-
-      // Thin accent rule below
-      ctx.fillStyle = T.accentColor;
-      ctx.globalAlpha = 0.5;
-      ctx.fillRect(W / 2 - 32, startY + measuredLines.length * lineHeight - lineHeight * 0.1 + 12, 64, 2);
-      ctx.globalAlpha = 1;
     }
 
     // ── AURA watermark ────────────────────────────────────────
@@ -394,9 +402,10 @@ export default function App() {
 
       if (hookText) {
         setGenerateStatus("Writing narration script...");
-        const narrationScript = await generateNarrationScript(userMessage, hookText).catch(() => hookText);
+        const script = await generateNarrationScript(userMessage, hookText).catch(() => hookText);
+        setNarrationScript(script);
         setGenerateStatus("Generating narration audio...");
-        await generateVoice(narrationScript).catch((err) => {
+        await generateVoice(script).catch((err) => {
           console.warn("Voice non-fatal:", err.message);
           setVoiceStatus("Narration unavailable");
         });
@@ -484,11 +493,12 @@ export default function App() {
     audioSource?.start(0);
     setExportStatus("Recording...");
 
+    const captionWords = (narrationScript || hook || "").split(/\s+/).filter(Boolean);
     const startTime = performance.now();
     const interval = setInterval(() => {
       const elapsed = performance.now() - startTime;
       setExportProgress(Math.min(99, Math.round((elapsed / durationMs) * 100)));
-      drawCanvasFrame(elapsed, durationMs);
+      drawCanvasFrame(elapsed, durationMs, captionWords);
     }, 33);
 
     setTimeout(() => { clearInterval(interval); recorder.stop(); }, durationMs);
@@ -509,6 +519,7 @@ export default function App() {
     setHashtags("");
     setVoiceBuffer(null);
     setVoiceStatus("");
+    setNarrationScript("");
     setGenerateStatus("");
     setExportStatus("");
     setExportProgress(0);
@@ -794,7 +805,7 @@ export default function App() {
                           onChange={(e) => setSelectedVoice(e.target.value)}
                         >
                           {VOICES.map((v) => (
-                            <option key={v.id} value={v.id}>{v.label}</option>
+                            <option key={v.id} value={v.id}>{v.label} — {v.desc}</option>
                           ))}
                         </select>
                       ),
@@ -914,7 +925,7 @@ export default function App() {
                         value={selectedVoice}
                         onChange={(e) => setSelectedVoice(e.target.value)}
                       >
-                        {VOICES.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
+                        {VOICES.map((v) => <option key={v.id} value={v.id}>{v.label} — {v.desc}</option>)}
                       </select>
                       {voiceBuffer ? (
                         <button

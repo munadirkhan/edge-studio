@@ -82,7 +82,7 @@ const upload = multer({
   },
 });
 
-app.post("/video/upload", (req, res, next) => {
+app.post("/video/upload", (req, _res, next) => {
   const jobId = uuid();
   req.jobId = jobId;
   next();
@@ -123,12 +123,12 @@ app.get("/video/status/:id", (req, res) => {
 app.post("/api/generate-image", async (req, res) => {
   const { templateId } = req.body;
   const TEMPLATE_PROMPTS = {
-    forest:    "Ancient misty forest at dawn, god rays through towering trees, cinematic 9:16 vertical, dark moody atmosphere, photorealistic",
-    ocean:     "Deep underwater ocean scene, bioluminescent creatures, volumetric light beams, cinematic 9:16 vertical, dark blue atmosphere",
-    moonlight: "Full moon over mountain peaks at midnight, dramatic clouds, cinematic 9:16 vertical, dark purple atmospheric sky",
-    sakura:    "Cherry blossom petals falling in slow motion, Japanese temple background, cinematic 9:16 vertical, soft pink moody light",
-    city:      "Aerial view of city at night, neon reflections on wet streets, cinematic 9:16 vertical, golden and amber tones",
-    gym:       "Dark gym with dramatic spotlight, iron weights, cinematic 9:16 vertical, high contrast, gritty motivational atmosphere",
+    forest:    "Serene ancient forest at blue hour, towering trees with soft god rays filtering through mist, anime illustration style, Studio Ghibli inspired, deep greens and ethereal light, vertical 9:16, ultra detailed, cinematic",
+    ocean:     "Calm ocean at sunset, glowing horizon reflecting on still water, illustrated style, dreamy atmospheric haze, soft blues and golds, vertical 9:16, ultra detailed, cinematic peaceful",
+    moonlight: "Full moon rising over quiet mountain village, glowing night sky with stars, anime illustration style, blue and silver tones, warm lights in windows below, vertical 9:16, ultra detailed, serene cinematic",
+    sakura:    "Cherry blossom path at dusk, petals drifting gently, soft pink and purple sky, illustrated anime style, tranquil Japanese garden, vertical 9:16, ultra detailed, calming cinematic",
+    city:      "Peaceful rain-slicked city street at night, glowing streetlights reflected in puddles, illustrated style, warm amber and blue tones, quiet and atmospheric, vertical 9:16, ultra detailed, cinematic",
+    gym:       "Lone figure silhouetted against dramatic dawn light on a mountain summit, illustrated cinematic style, inspirational atmosphere, deep contrast, vertical 9:16, ultra detailed, motivational",
   };
   const prompt = TEMPLATE_PROMPTS[templateId] || TEMPLATE_PROMPTS.city;
   try {
