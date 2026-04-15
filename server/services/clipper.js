@@ -10,9 +10,9 @@ export async function createClip({ videoPath, start, end, outputDir, jobId, rank
 
   // Two-pass: first clip + vertical crop, then burn captions if provided
   await new Promise((resolve, reject) => {
-    // vf: crop to 9:16 centered, scale to 1080x1920
-    // Scale to fill 1080x1920 (cover), then crop — works for any aspect ratio
-    const vfCrop = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920";
+    // Crop to 9:16 first (takes center slice), then scale up to 1080x1920
+    // This avoids huge intermediate frames that crash on low-memory servers
+    const vfCrop = "crop=min(iw\\,ih*9/16):min(ih\\,iw*16/9),scale=1080:1920,setsar=1";
 
     const args = [
       "-ss", String(start),
