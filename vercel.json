@@ -2,8 +2,7 @@
   "rewrites": [
     {
       "source": "/video/:path*",
-      "destination": "https://edge-studio-production.up.railway.app/video/:path*",
-      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      "destination": "https://edge-studio-production.up.railway.app/video/:path*"
     },
     {
       "source": "/clips/:path*",
@@ -15,8 +14,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://edge-studio-production.up.railway.app/api/:path*",
-      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      "destination": "https://edge-studio-production.up.railway.app/api/:path*"
     }
   ]
 }
