@@ -40,8 +40,8 @@ export async function downloadVideo(url, outputDir, jobId) {
     ...getCookieArgs(),
   ];
 
-  // Try clients in order — iOS is most reliable, fall back to others
-  const clients = ["ios", "mweb", "web", "android"];
+  // Try clients in order — tv_embedded often bypasses bot checks without cookies
+  const clients = ["tv_embedded", "tv", "ios", "mweb", "web", "android"];
   let lastErr;
 
   for (const client of clients) {

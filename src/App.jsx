@@ -193,20 +193,20 @@ export default function App() {
         const lineProgress = (elapsedMs - lineIdx * msPerLine) / msPerLine; // 0→1 within current line
         const phrase     = lines[lineIdx] || "";
 
-        const fontSize   = 82;
-        const capY       = H * 0.72; // lower-third position
+        const fontSize   = 58;
+        const capY       = H * 0.80; // lower-third position
 
         // Pill background for readability
         ctx.font = `800 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
         const textW = ctx.measureText(phrase.toUpperCase()).width;
-        const padX = 36, padY = 18;
+        const padX = 28, padY = 14;
         const pillX = W / 2 - textW / 2 - padX;
         const pillY = capY - fontSize * 0.82 - padY;
         const pillW = textW + padX * 2;
         const pillH = fontSize + padY * 2;
-        const r = 16;
+        const r = 12;
 
-        ctx.globalAlpha = 0.52;
+        ctx.globalAlpha = 0.55;
         ctx.fillStyle = "rgba(0,0,0,1)";
         ctx.beginPath();
         ctx.roundRect(pillX, pillY, pillW, pillH, r);
@@ -216,13 +216,13 @@ export default function App() {
         // Text stroke + fill
         ctx.font = `800 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
         ctx.textAlign = "center";
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 6;
         ctx.strokeStyle = "rgba(0,0,0,0.9)";
         ctx.lineJoin = "round";
         ctx.strokeText(phrase.toUpperCase(), W / 2, capY);
         ctx.fillStyle = "#ffffff";
         ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur  = 8;
+        ctx.shadowBlur  = 6;
         ctx.fillText(phrase.toUpperCase(), W / 2, capY);
         ctx.shadowBlur  = 0;
 
@@ -263,6 +263,23 @@ export default function App() {
       }
     }
 
+    // ── EdgeStudio watermark ──────────────────────────────────
+    const stampY = H - 80;
+    ctx.save();
+    ctx.translate(W / 2, stampY);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = T.accentColor;
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(-5, -5, 10, 10);
+    ctx.restore();
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 14px 'Inter', -apple-system, sans-serif";
+    ctx.letterSpacing = "0.12em";
+    ctx.textAlign = "center";
+    ctx.fillText("EdgeStudio", W / 2, stampY + 28);
+    ctx.globalAlpha = 1;
+    ctx.letterSpacing = "0em";
   }
 
   // ─── Image generation ────────────────────────────────────────────────────────
