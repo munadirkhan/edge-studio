@@ -13,7 +13,10 @@ async function parseApiResponse(response, fallbackMessage) {
   let data = {};
   if (text) {
     try { data = JSON.parse(text); }
-    catch { throw new Error(`${fallbackMessage} (non-JSON response)`); }
+    catch {
+      const preview = text.slice(0, 120).replace(/\s+/g, " ");
+      throw new Error(`${fallbackMessage} — server returned: ${preview}`);
+    }
   }
   if (!response.ok) throw new Error(data.error || `${fallbackMessage} (${response.status})`);
   return data;
@@ -82,6 +85,7 @@ export default function App() {
   const [userMessage, setUserMessage]   = useState("");
   const [jarvisIdea, setJarvisIdea]     = useState("");
   const [jarvisBusy, setJarvisBusy]     = useState(false);
+  const [jarvisError, setJarvisError]   = useState("");
   const [clipDuration, setClipDuration] = useState(15);
 
   // Step 2: style
@@ -350,15 +354,29 @@ export default function App() {
   async function handleJarvisSuggest() {
     if (!jarvisIdea.trim() || jarvisBusy) return;
     setJarvisBusy(true);
+    setJarvisError("");
     try {
-      const res  = await fetch("/api/jarvis-suggest", {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch("/api/jarvis-suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idea: jarvisIdea }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await parseApiResponse(res, "JARVIS failed");
-      if (data.message) setUserMessage(data.message);
+      if (data.message) {
+        setUserMessage(data.message);
+      } else {
+        setJarvisError("No response — check that OPENAI_API_KEY is set in Railway");
+      }
     } catch (err) {
+      if (err.name === "AbortError") {
+        setJarvisError("Request timed out — Railway server may be sleeping, try again");
+      } else {
+        setJarvisError(err.message || "JARVIS failed");
+      }
       console.error("JARVIS suggest error:", err);
     } finally {
       setJarvisBusy(false);
@@ -696,12 +714,18 @@ export default function App() {
                       onClick={handleJarvisSuggest}
                       disabled={!jarvisIdea.trim() || jarvisBusy}
                     >
-                      {jarvisBusy ? "..." : "Fill →"}
+                      {jarvisBusy ? "Thinking…" : "Fill →"}
                     </button>
                   </div>
-                  <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#6e6a66" }}>
-                    JARVIS will craft your message — or write your own below.
-                  </p>
+                  {jarvisError ? (
+                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#f87171" }}>
+                      ✕ {jarvisError}
+                    </p>
+                  ) : (
+                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#6e6a66" }}>
+                      JARVIS will craft your message — or write your own below.
+                    </p>
+                  )}
                 </div>
 
                 {/* Message textarea */}

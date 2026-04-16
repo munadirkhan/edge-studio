@@ -15,7 +15,8 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://edge-studio-production.up.railway.app/api/:path*"
+      "destination": "https://edge-studio-production.up.railway.app/api/:path*",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     }
   ]
 }
