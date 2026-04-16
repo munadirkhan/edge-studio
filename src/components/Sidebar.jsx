@@ -47,8 +47,8 @@ export default function Sidebar({ mode, setMode }) {
             }}>BETA</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.4rem" }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block", flexShrink: 0 }} />
-            <span style={{ fontSize: "0.62rem", color: "#3a3735", letterSpacing: "0.06em" }}>JARVIS ONLINE</span>
+            <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block", flexShrink: 0 }} />
+            <span style={{ fontSize: "0.62rem", color: "#6e6a66", letterSpacing: "0.06em" }}>JARVIS ONLINE</span>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ export default function Sidebar({ mode, setMode }) {
                   display: "flex", alignItems: "center", gap: "0.7rem",
                   padding: "0.6rem 0.85rem", borderRadius: 10, border: "none",
                   background: isActive ? "rgba(201,169,110,0.1)" : "transparent",
-                  color: isActive ? "var(--accent)" : "#4a4745",
+                  color: isActive ? "var(--accent)" : "#7a7672",
                   cursor: item.id === "projects" ? "default" : "pointer",
                   fontFamily: "inherit", fontSize: "0.875rem", fontWeight: isActive ? 600 : 400,
                   transition: "all 0.15s", textAlign: "left", width: "100%",
@@ -76,7 +76,7 @@ export default function Sidebar({ mode, setMode }) {
                 <span style={{ fontSize: "0.85rem", width: 18, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
                 <span>{item.label}</span>
                 {item.id === "projects" && (
-                  <span style={{ marginLeft: "auto", fontSize: "0.55rem", background: "rgba(255,255,255,0.06)", borderRadius: 4, padding: "0.1rem 0.4rem", color: "#3a3735" }}>SOON</span>
+                  <span style={{ marginLeft: "auto", fontSize: "0.55rem", background: "rgba(255,255,255,0.06)", borderRadius: 4, padding: "0.1rem 0.4rem", color: "#6e6a66" }}>SOON</span>
                 )}
               </button>
             );
@@ -90,7 +90,7 @@ export default function Sidebar({ mode, setMode }) {
             style={{
               display: "flex", alignItems: "center", gap: "0.7rem",
               padding: "0.6rem 0.85rem", borderRadius: 10, border: "none",
-              background: "transparent", color: "#4a4745",
+              background: "transparent", color: "#7a7672",
               cursor: "pointer", fontFamily: "inherit", fontSize: "0.875rem",
               transition: "all 0.15s", textAlign: "left", width: "100%",
             }}
@@ -102,13 +102,15 @@ export default function Sidebar({ mode, setMode }) {
           </button>
 
           {user ? (
-            <div style={{ padding: "0.75rem 0.85rem", borderRadius: 10, background: "rgba(255,255,255,0.03)" }}>
-              <p style={{ margin: "0 0 0.5rem", fontSize: "0.72rem", color: "#5a5755", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ padding: "0.75rem 0.85rem", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)" }}>
+              <p style={{ margin: "0 0 0.5rem", fontSize: "0.72rem", color: "#8a8480", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {user.email}
               </p>
               <button
                 onClick={signOut}
-                style={{ fontSize: "0.72rem", color: "#4a4745", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+                style={{ fontSize: "0.72rem", color: "#9a9490", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, transition: "color 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.color = "#f0ede8"}
+                onMouseLeave={e => e.currentTarget.style.color = "#9a9490"}
               >
                 Sign out →
               </button>
@@ -117,17 +119,19 @@ export default function Sidebar({ mode, setMode }) {
             <button
               onClick={() => setShowAuth(true)}
               style={{
-                display: "flex", alignItems: "center", gap: "0.7rem",
-                padding: "0.6rem 0.85rem", borderRadius: 10, border: "none",
-                background: "transparent", color: "#4a4745",
-                cursor: "pointer", fontFamily: "inherit", fontSize: "0.875rem",
-                transition: "all 0.15s", textAlign: "left", width: "100%",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                padding: "0.65rem 0.85rem", borderRadius: 10,
+                border: "1px solid var(--accent-border)",
+                background: "var(--accent-dim)",
+                color: "var(--accent)",
+                cursor: "pointer", fontFamily: "inherit", fontSize: "0.82rem", fontWeight: 600,
+                transition: "all 0.15s", width: "100%",
               }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,169,110,0.16)"; e.currentTarget.style.borderColor = "rgba(201,169,110,0.35)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-dim)"; e.currentTarget.style.borderColor = "var(--accent-border)"; }}
             >
-              <span style={{ fontSize: "0.85rem", width: 18, textAlign: "center" }}>◉</span>
-              <span>Sign in</span>
+              <span style={{ fontSize: "0.75rem" }}>◉</span>
+              <span>Sign in to save clips</span>
             </button>
           )}
         </div>

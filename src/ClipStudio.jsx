@@ -237,7 +237,7 @@ export default function ClipStudio() {
               ) : (
                 <div>
                   <p style={{ margin: "0 0 0.35rem", fontSize: "0.85rem", color: "#5a5755" }}>Drop a video file here</p>
-                  <p style={{ margin: 0, fontSize: "0.7rem", color: "#3a3735" }}>or click to browse — mp4, mov, webm</p>
+                  <p style={{ margin: 0, fontSize: "0.7rem", color: "#6e6a66" }}>or click to browse — mp4, mov, webm</p>
                 </div>
               )}
             </div>
@@ -319,7 +319,7 @@ export default function ClipStudio() {
           <div className="progress-bar" style={{ height: 3 }}>
             <div className="progress-fill" style={{ width: stageToPercent(job.stage) + "%" }} />
           </div>
-          <p style={{ margin: "0.5rem 0 0", fontSize: "0.68rem", color: "#4a4745" }}>
+          <p style={{ margin: "0.5rem 0 0", fontSize: "0.68rem", color: "#6e6a66" }}>
             2–5 min depending on video length.
           </p>
         </div>
@@ -423,7 +423,7 @@ function ClipCard({ clip, playing, onPlay }) {
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3735", fontSize: "2rem" }}>▶</div>
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#6e6a66", fontSize: "2rem" }}>▶</div>
         )}
 
         {/* Play button overlay */}

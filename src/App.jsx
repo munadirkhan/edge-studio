@@ -565,7 +565,7 @@ export default function App() {
                 <h1 style={{ margin: "0 0 1.25rem", fontSize: "clamp(2.8rem, 7vw, 5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#f0ede8" }}>
                   Create AI videos.<br />Clip anything into<br /><span style={accentStyle}>viral short-form content.</span>
                 </h1>
-                <p style={{ margin: "0 auto 3rem", fontSize: "1.05rem", color: "#5a5755", maxWidth: 560, lineHeight: 1.7 }}>
+                <p style={{ margin: "0 auto 3rem", fontSize: "1.05rem", color: "#9a9490", maxWidth: 560, lineHeight: 1.7 }}>
                   Write a prompt and JARVIS generates a cinematic AI video with narration, music-ready visuals, and burned captions — or paste a YouTube link and it finds your best moments, clips to 9:16, and scores each one for viral potential.
                 </p>
 
@@ -589,14 +589,14 @@ export default function App() {
                     <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>AI image + voice narration</span>
                   </button>
                 </div>
-                <p style={{ fontSize: "0.72rem", color: "#3a3735" }}>No account needed to start — clips save when signed in</p>
+                <p style={{ fontSize: "0.72rem", color: "#6e6a66" }}>No account needed to start — clips save when signed in</p>
               </div>
             </div>
 
             {/* Features */}
             <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem" }}>
               <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-                <p style={{ textAlign: "center", margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#5a5755" }}>WHAT IT DOES</p>
+                <p style={{ textAlign: "center", margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#7a7672" }}>WHAT IT DOES</p>
                 <h2 style={{ textAlign: "center", margin: "0 0 3.5rem", fontSize: "clamp(1.6rem, 4vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>
                   Everything you need to go viral
                 </h2>
@@ -612,7 +612,7 @@ export default function App() {
                     <div key={f.title} className="glass-card" style={{ padding: "1.5rem" }}>
                       <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{f.icon}</div>
                       <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", fontWeight: 700, color: "#f0ede8" }}>{f.title}</h3>
-                      <p style={{ margin: 0, fontSize: "0.82rem", color: "#5a5755", lineHeight: 1.6 }}>{f.desc}</p>
+                      <p style={{ margin: 0, fontSize: "0.82rem", color: "#8a8480", lineHeight: 1.6 }}>{f.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -622,7 +622,7 @@ export default function App() {
             {/* How it works */}
             <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem" }}>
               <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
-                <p style={{ margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#5a5755" }}>HOW IT WORKS</p>
+                <p style={{ margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#7a7672" }}>HOW IT WORKS</p>
                 <h2 style={{ margin: "0 0 3.5rem", fontSize: "clamp(1.6rem, 4vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>Three steps to a short</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0", position: "relative" }}>
                   {[
@@ -634,7 +634,7 @@ export default function App() {
                       <span style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent)", opacity: 0.25, flexShrink: 0, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{s.step}</span>
                       <div>
                         <h3 style={{ margin: "0 0 0.4rem", fontSize: "1.05rem", fontWeight: 700, color: "#f0ede8" }}>{s.title}</h3>
-                        <p style={{ margin: 0, fontSize: "0.875rem", color: "#5a5755", lineHeight: 1.6 }}>{s.desc}</p>
+                        <p style={{ margin: 0, fontSize: "0.875rem", color: "#8a8480", lineHeight: 1.6 }}>{s.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -645,7 +645,7 @@ export default function App() {
             {/* Final CTA */}
             <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem", textAlign: "center" }}>
               <h2 style={{ margin: "0 0 1rem", fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>Ready to clip?</h2>
-              <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#5a5755" }}>Free to use. No credit card. Start in seconds.</p>
+              <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#9a9490" }}>Free to use. No credit card. Start in seconds.</p>
               <button
                 onClick={() => setMode("clip")}
                 className="btn-accent"
@@ -654,8 +654,8 @@ export default function App() {
                 ✂ Start Clipping →
               </button>
               <div style={{ marginTop: "3rem", display: "flex", gap: "1.5rem", justifyContent: "center" }}>
-                <button onClick={() => setShowTerms(true)} style={{ background: "none", border: "none", color: "#3a3735", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Terms of Service</button>
-                <button onClick={() => setShowPrivacy(true)} style={{ background: "none", border: "none", color: "#3a3735", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Privacy Policy</button>
+                <button onClick={() => setShowTerms(true)} style={{ background: "none", border: "none", color: "#6e6a66", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Terms of Service</button>
+                <button onClick={() => setShowPrivacy(true)} style={{ background: "none", border: "none", color: "#6e6a66", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Privacy Policy</button>
               </div>
             </div>
           </div>
@@ -699,7 +699,7 @@ export default function App() {
                       {jarvisBusy ? "..." : "Fill →"}
                     </button>
                   </div>
-                  <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#4a4745" }}>
+                  <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#6e6a66" }}>
                     JARVIS will craft your message — or write your own below.
                   </p>
                 </div>
@@ -745,7 +745,7 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-                  <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#4a4745" }}>
+                  <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#6e6a66" }}>
                     Narration auto-extends if longer than selected duration.
                   </p>
                 </div>
@@ -849,26 +849,93 @@ export default function App() {
             {/* STEP 3: Generating */}
             {mode === "create" && step === 3 && (
               <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                <div className="glass-card" style={{ padding: "2rem", textAlign: "center" }}>
-                  <p style={{ fontSize: "0.75rem", color: "#5a5755", margin: "0 0 0.5rem", letterSpacing: "0.06em" }}>READY TO GENERATE</p>
-                  <p style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: selectedTemplate?.accentColor || "var(--accent)" }}>
-                    {selectedTemplate?.preview} {selectedTemplate?.name}
-                  </p>
-                  {generateStatus && (
-                    <p style={{ marginTop: "1.25rem", fontSize: "0.85rem", color: generateStatus.startsWith("Error") ? "#f87171" : "#a09888" }}>
-                      {generateStatus}
-                    </p>
+                <div className="glass-card" style={{ padding: "2rem" }}>
+                  {!generating ? (
+                    /* Pre-generate confirmation */
+                    <div style={{ textAlign: "center" }}>
+                      <p style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", margin: "0 0 0.6rem", letterSpacing: "0.1em", fontWeight: 700 }}>READY TO GENERATE</p>
+                      <p style={{ fontSize: "1.5rem", fontWeight: 800, margin: "0 0 0.3rem", color: selectedTemplate?.accentColor || "var(--accent)", letterSpacing: "-0.02em" }}>
+                        {selectedTemplate?.preview} {selectedTemplate?.name}
+                      </p>
+                      <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-tertiary)" }}>
+                        AI image · Voice narration · Captions
+                      </p>
+                      {generateStatus?.startsWith("Error") && (
+                        <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#f87171" }}>{generateStatus}</p>
+                      )}
+                    </div>
+                  ) : (
+                    /* Animated generating state */
+                    <div>
+                      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+                        <div className="generating-ring" />
+                        <p style={{ margin: "1.25rem 0 0.25rem", fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                          {generateStatus || "Starting…"}
+                        </p>
+                        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-tertiary)" }}>
+                          This takes 20–40 seconds
+                        </p>
+                      </div>
+                      {/* Stage checklist */}
+                      <div style={{ maxWidth: 340, margin: "0 auto" }}>
+                        {[
+                          { key: "Generating background image...", label: "Generating background image" },
+                          { key: "Writing your content...",        label: "Writing hook & caption"       },
+                          { key: "Writing narration script...",    label: "Writing narration script"     },
+                          { key: "Generating narration audio...",  label: "Recording AI voice"           },
+                        ].map(({ key, label }, i) => {
+                          const stages = [
+                            "Generating background image...",
+                            "Writing your content...",
+                            "Writing narration script...",
+                            "Generating narration audio...",
+                          ];
+                          const currentIdx = stages.indexOf(generateStatus);
+                          const isDone   = currentIdx > i || generateStatus === "Ready to export!";
+                          const isActive = currentIdx === i;
+                          return (
+                            <div
+                              key={key}
+                              className="generating-stage-row"
+                              style={{ opacity: isDone || isActive ? 1 : 0.35 }}
+                            >
+                              <div style={{
+                                width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                background: isDone ? "rgba(74,222,128,0.12)" : isActive ? "var(--accent-dim)" : "rgba(255,255,255,0.04)",
+                                border: `1px solid ${isDone ? "rgba(74,222,128,0.35)" : isActive ? "var(--accent-border)" : "var(--border)"}`,
+                                transition: "all 0.3s",
+                              }}>
+                                {isDone
+                                  ? <span style={{ fontSize: "0.6rem", color: "#4ade80", fontWeight: 800 }}>✓</span>
+                                  : isActive
+                                    ? <span className="generating-stage-dot" />
+                                    : null
+                                }
+                              </div>
+                              <span style={{
+                                fontSize: "0.82rem",
+                                color: isDone ? "var(--text-tertiary)" : isActive ? "var(--text-primary)" : "var(--text-muted)",
+                                fontWeight: isActive ? 600 : 400,
+                              }}>
+                                {label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "0.75rem" }}>
-                  <button className="btn-ghost" style={{ flex: 1, padding: "0.85rem", fontSize: "0.875rem" }} onClick={() => setStep(2)}>← Back</button>
+                  <button className="btn-ghost" style={{ flex: 1, padding: "0.85rem", fontSize: "0.875rem" }} onClick={() => !generating && setStep(2)} disabled={generating}>← Back</button>
                   <button
                     className="btn-accent"
                     style={{ flex: 2, padding: "0.85rem", fontSize: "0.875rem" }}
                     onClick={handleGenerate}
                     disabled={generating}
                   >
-                    {generating ? "✦ Generating..." : "✦ Generate"}
+                    {generating ? "✦ Generating…" : "✦ Generate"}
                   </button>
                 </div>
               </div>
@@ -896,7 +963,7 @@ export default function App() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "0.85rem", borderBottom: "1px solid var(--border)" }}>
                       <div>
                         <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 600, color: "#a09888" }}>Text on video</p>
-                        <p style={{ margin: "0.15rem 0 0", fontSize: "0.68rem", color: "#4a4745" }}>
+                        <p style={{ margin: "0.15rem 0 0", fontSize: "0.68rem", color: "#6e6a66" }}>
                           {showTextOverlay ? "Shows hook text — or turn off to add text natively in TikTok" : "Clean background — add text in TikTok/Reels editor"}
                         </p>
                       </div>
@@ -936,7 +1003,7 @@ export default function App() {
                           ▶ Preview Narration
                         </button>
                       ) : (
-                        <span style={{ flex: 1, fontSize: "0.75rem", color: "#4a4745" }}>
+                        <span style={{ flex: 1, fontSize: "0.75rem", color: "#6e6a66" }}>
                           {voiceStatus || "No narration"}
                         </span>
                       )}
@@ -967,8 +1034,8 @@ export default function App() {
                           <div className="progress-fill" style={{ width: `${exportProgress}%` }} />
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.4rem" }}>
-                          <span style={{ fontSize: "0.7rem", color: "#5a5755" }}>{exportStatus}</span>
-                          <span style={{ fontSize: "0.7rem", color: "#5a5755" }}>{exportProgress}%</span>
+                          <span style={{ fontSize: "0.7rem", color: "#8a8480" }}>{exportStatus}</span>
+                          <span style={{ fontSize: "0.7rem", color: "#8a8480" }}>{exportProgress}%</span>
                         </div>
                       </div>
                     )}
@@ -980,36 +1047,39 @@ export default function App() {
                   {hook && (
                     <div className="glass-card" style={{ padding: "1rem", borderColor: "var(--accent-border)" }}>
                       <p style={{ margin: "0 0 0.5rem", fontSize: "0.65rem", fontWeight: 700, ...accentStyle, letterSpacing: "0.08em" }}>HOOK</p>
-                      <p style={{ margin: "0 0 0.75rem", fontSize: "0.85rem", fontWeight: 600, lineHeight: 1.5, color: "#e8e0d0" }}>{hook}</p>
+                      <p style={{ margin: "0 0 0.85rem", fontSize: "0.85rem", fontWeight: 600, lineHeight: 1.5, color: "#e8e0d0" }}>{hook}</p>
                       <button
-                        style={{ background: "none", border: "none", padding: 0, fontSize: "0.7rem", color: "#5a5755", cursor: "pointer" }}
+                        className="btn-ghost"
+                        style={{ width: "100%", padding: "0.45rem 0.75rem", fontSize: "0.72rem", borderRadius: 8, fontFamily: "inherit" }}
                         onClick={() => navigator.clipboard.writeText(hook)}
                       >
-                        Copy
+                        Copy Hook
                       </button>
                     </div>
                   )}
                   {caption && (
                     <div className="glass-card" style={{ padding: "1rem" }}>
-                      <p style={{ margin: "0 0 0.5rem", fontSize: "0.65rem", fontWeight: 700, color: "#6b6568", letterSpacing: "0.08em" }}>CAPTION</p>
-                      <p style={{ margin: "0 0 0.75rem", fontSize: "0.82rem", lineHeight: 1.6, color: "#c0b8b0", display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{caption}</p>
+                      <p style={{ margin: "0 0 0.5rem", fontSize: "0.65rem", fontWeight: 700, color: "#8a8480", letterSpacing: "0.08em" }}>CAPTION</p>
+                      <p style={{ margin: "0 0 0.85rem", fontSize: "0.82rem", lineHeight: 1.6, color: "#c0b8b0", display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{caption}</p>
                       <button
-                        style={{ background: "none", border: "none", padding: 0, fontSize: "0.7rem", color: "#5a5755", cursor: "pointer" }}
+                        className="btn-ghost"
+                        style={{ width: "100%", padding: "0.45rem 0.75rem", fontSize: "0.72rem", borderRadius: 8, fontFamily: "inherit" }}
                         onClick={() => navigator.clipboard.writeText(caption)}
                       >
-                        Copy
+                        Copy Caption
                       </button>
                     </div>
                   )}
                   {hashtags && (
                     <div className="glass-card" style={{ padding: "1rem", gridColumn: "1 / -1" }}>
-                      <p style={{ margin: "0 0 0.5rem", fontSize: "0.65rem", fontWeight: 700, color: "#6b6568", letterSpacing: "0.08em" }}>HASHTAGS</p>
-                      <p style={{ margin: "0 0 0.75rem", fontSize: "0.82rem", color: "#a09888", lineHeight: 1.7 }}>{hashtags}</p>
+                      <p style={{ margin: "0 0 0.5rem", fontSize: "0.65rem", fontWeight: 700, color: "#8a8480", letterSpacing: "0.08em" }}>HASHTAGS</p>
+                      <p style={{ margin: "0 0 0.85rem", fontSize: "0.82rem", color: "#a09888", lineHeight: 1.7 }}>{hashtags}</p>
                       <button
-                        style={{ background: "none", border: "none", padding: 0, fontSize: "0.7rem", color: "#5a5755", cursor: "pointer" }}
+                        className="btn-ghost"
+                        style={{ padding: "0.45rem 0.85rem", fontSize: "0.72rem", borderRadius: 8, fontFamily: "inherit" }}
                         onClick={() => navigator.clipboard.writeText(hashtags)}
                       >
-                        Copy
+                        Copy Hashtags
                       </button>
                     </div>
                   )}
@@ -1043,7 +1113,7 @@ export default function App() {
 
             {/* Stats */}
             <div className="glass-card" style={{ padding: "1.1rem" }}>
-              <p style={{ margin: "0 0 0.75rem", fontSize: "0.65rem", fontWeight: 700, color: "#4a4745", letterSpacing: "0.08em" }}>SESSION</p>
+              <p style={{ margin: "0 0 0.75rem", fontSize: "0.65rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.08em" }}>SESSION</p>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <span style={{ fontSize: "0.78rem", color: "#6b6568" }}>Generated</span>
                 <span style={{ fontSize: "0.78rem", fontWeight: 700, ...accentStyle }}>{activityLog.length}</span>
@@ -1059,10 +1129,10 @@ export default function App() {
 
             {/* Activity log */}
             <div className="glass-card" style={{ padding: "1.1rem" }}>
-              <p style={{ margin: "0 0 0.75rem", fontSize: "0.65rem", fontWeight: 700, color: "#4a4745", letterSpacing: "0.08em" }}>ACTIVITY</p>
+              <p style={{ margin: "0 0 0.75rem", fontSize: "0.65rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.08em" }}>ACTIVITY</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: 220, overflowY: "auto" }}>
                 {activityLog.length === 0 ? (
-                  <p style={{ fontSize: "0.75rem", color: "#3a3735", fontStyle: "italic", margin: 0 }}>No activity yet</p>
+                  <p style={{ fontSize: "0.75rem", color: "#6e6a66", margin: 0 }}>No activity yet</p>
                 ) : (
                   activityLog.map((entry) => (
                     <div key={entry.id} style={{
@@ -1076,7 +1146,7 @@ export default function App() {
                       </span>
                       <div style={{ minWidth: 0 }}>
                         <p style={{ margin: 0, fontSize: "0.72rem", color: "#a09888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.template}</p>
-                        <p style={{ margin: 0, fontSize: "0.65rem", color: "#4a4745" }}>{entry.timestamp}</p>
+                        <p style={{ margin: 0, fontSize: "0.65rem", color: "#6e6a66" }}>{entry.timestamp}</p>
                       </div>
                     </div>
                   ))
@@ -1087,11 +1157,11 @@ export default function App() {
             {/* Duration reminder */}
             {step >= 1 && (
               <div className="glass-card" style={{ padding: "1rem" }}>
-                <p style={{ margin: "0 0 0.3rem", fontSize: "0.65rem", fontWeight: 700, color: "#4a4745", letterSpacing: "0.08em" }}>CLIP LENGTH</p>
+                <p style={{ margin: "0 0 0.3rem", fontSize: "0.65rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.08em" }}>CLIP LENGTH</p>
                 <p style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800, ...accentStyle, letterSpacing: "-0.02em" }}>
                   {clipDuration >= 60 ? "1 min" : `${clipDuration}s`}
                 </p>
-                <p style={{ margin: "0.25rem 0 0", fontSize: "0.68rem", color: "#4a4745" }}>
+                <p style={{ margin: "0.25rem 0 0", fontSize: "0.68rem", color: "#6e6a66" }}>
                   {clipDuration <= 15 ? "Punchy — great for hooks" : clipDuration <= 30 ? "Balanced — story + hook" : "Long form — full impact"}
                 </p>
               </div>
