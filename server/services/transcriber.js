@@ -22,7 +22,7 @@ export async function extractAudio(videoPath, outputDir, jobId) {
       "-vn",
       "-ar", "16000",
       "-ac", "1",
-      "-b:a", "64k",
+      "-b:a", "32k",
       "-y",
       audioPath,
     ], (err) => (err ? reject(err) : resolve()));

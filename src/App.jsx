@@ -182,38 +182,49 @@ export default function App() {
       ctx.textAlign = "center";
 
       if (captionWords && captionWords.length > 0 && durationMs > 0) {
-        // ── Word-by-word synced captions (export mode) ──
-        const msPerWord = durationMs / captionWords.length;
-        const wordIdx   = Math.floor(elapsedMs / msPerWord);
-        // Show 2 words at a time, grouped
-        const groupIdx  = Math.floor(wordIdx / 2);
-        const w1 = captionWords[groupIdx * 2]     || "";
-        const w2 = captionWords[groupIdx * 2 + 1] || "";
-        const lines = [w1, w2].filter(Boolean);
+        // ── Phrase-by-phrase synced captions (subtitle style) ──
+        const WORDS_PER_LINE = 4;
+        const lines = [];
+        for (let i = 0; i < captionWords.length; i += WORDS_PER_LINE) {
+          lines.push(captionWords.slice(i, i + WORDS_PER_LINE).join(" "));
+        }
+        const msPerLine  = durationMs / lines.length;
+        const lineIdx    = Math.min(Math.floor(elapsedMs / msPerLine), lines.length - 1);
+        const lineProgress = (elapsedMs - lineIdx * msPerLine) / msPerLine; // 0→1 within current line
+        const phrase     = lines[lineIdx] || "";
 
-        const fontSize   = 120;
-        const lineHeight = fontSize * 1.18;
-        const totalH     = lines.length * lineHeight;
-        const startY     = H * 0.5 - totalH / 2 + fontSize * 0.78;
+        const fontSize   = 82;
+        const capY       = H * 0.72; // lower-third position
 
-        lines.forEach((word, i) => {
-          const y = startY + i * lineHeight;
-          const isCurrentWord = groupIdx * 2 + i === wordIdx;
+        // Pill background for readability
+        ctx.font = `800 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
+        const textW = ctx.measureText(phrase.toUpperCase()).width;
+        const padX = 36, padY = 18;
+        const pillX = W / 2 - textW / 2 - padX;
+        const pillY = capY - fontSize * 0.82 - padY;
+        const pillW = textW + padX * 2;
+        const pillH = fontSize + padY * 2;
+        const r = 16;
 
-          // Black stroke outline
-          ctx.font = `900 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
-          ctx.lineWidth = 14;
-          ctx.strokeStyle = "rgba(0,0,0,0.95)";
-          ctx.lineJoin = "round";
-          ctx.strokeText(word.toUpperCase(), W / 2, y);
+        ctx.globalAlpha = 0.52;
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillW, pillH, r);
+        ctx.fill();
+        ctx.globalAlpha = 1;
 
-          // Fill — current word gets accent highlight
-          ctx.fillStyle = isCurrentWord ? T.accentColor : "#ffffff";
-          ctx.shadowColor = "rgba(0,0,0,0.6)";
-          ctx.shadowBlur  = 12;
-          ctx.fillText(word.toUpperCase(), W / 2, y);
-          ctx.shadowBlur  = 0;
-        });
+        // Text stroke + fill
+        ctx.font = `800 ${fontSize}px 'Arial Black', 'Impact', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "rgba(0,0,0,0.9)";
+        ctx.lineJoin = "round";
+        ctx.strokeText(phrase.toUpperCase(), W / 2, capY);
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur  = 8;
+        ctx.fillText(phrase.toUpperCase(), W / 2, capY);
+        ctx.shadowBlur  = 0;
 
       } else {
         // ── Static hook preview (non-export mode) ──
@@ -252,31 +263,6 @@ export default function App() {
       }
     }
 
-    // ── AURA watermark ────────────────────────────────────────
-    // Watermark strip at bottom
-    const stampY = H - 110;
-
-    // Diamond mark
-    ctx.save();
-    ctx.translate(W / 2, stampY);
-    ctx.rotate(Math.PI / 4);
-    ctx.fillStyle = T.accentColor;
-    ctx.globalAlpha = 0.7;
-    ctx.fillRect(-6, -6, 12, 12);
-    ctx.restore();
-
-    // "AURA" text
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = T.textColor;
-    ctx.font = "700 22px 'Inter', sans-serif";
-    ctx.letterSpacing = "0.22em";
-    ctx.textAlign = "center";
-    ctx.fillText("A  U  R  A", W / 2, stampY + 36);
-    ctx.globalAlpha = 0.25;
-    ctx.font = "400 16px 'Inter', sans-serif";
-    ctx.fillText("EdgeStudio", W / 2, stampY + 62);
-    ctx.globalAlpha = 1;
-    ctx.letterSpacing = "0em";
   }
 
   // ─── Image generation ────────────────────────────────────────────────────────
@@ -447,7 +433,7 @@ export default function App() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "aura.png";
+    link.download = "edge-studio.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
   }
@@ -501,7 +487,7 @@ export default function App() {
       const url  = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "aura.webm";
+      a.download = "edge-studio.webm";
       a.click();
       setExportStatus("Done");
       setExportProgress(100);
