@@ -61,8 +61,7 @@ export async function downloadVideo(url, outputDir, jobId) {
   }
 
   throw new Error(
-    "YouTube blocked all download attempts. Add your YOUTUBE_COOKIES to Railway env vars to fix this. " +
-    "Export cookies with the 'Get cookies.txt LOCALLY' Chrome extension and paste into Railway → Variables → YOUTUBE_COOKIES.\n" +
+    "YouTube blocked all download attempts. Fix: go to youtube.com in Chrome → click 'Get cookies.txt LOCALLY' extension → select 'Current Site Only' (NOT All Cookies) → copy the small file → paste into Railway → Variables → YOUTUBE_COOKIES. Then restart Railway service.\n" +
     `Last error: ${lastErr?.message?.slice(0, 300)}`
   );
 }
