@@ -10,29 +10,36 @@ const NAV = [
   { id: "projects",icon: "▦", label: "Projects" },
 ];
 
-export default function Sidebar({ mode, setMode }) {
+export default function Sidebar({ mode, setMode, isOpen, onClose }) {
   const { user, signOut } = useAuth();
   const [showFeedback, setShowFeedback] = useState(false);
   const [showAuth, setShowAuth]         = useState(false);
 
   function navigate(id) {
     if (id === "home")     setMode(null);
-    else if (id === "projects") return; // future
+    else if (id === "projects") return;
     else setMode(id);
+    onClose?.(); // close drawer on mobile after nav
   }
 
   const active = mode === null ? "home" : mode === "create" ? "create" : mode === "clip" ? "clip" : null;
 
   return (
     <>
-      <aside style={{
-        width: 220, flexShrink: 0, height: "100vh", position: "sticky", top: 0,
-        borderRight: "1px solid var(--border)",
-        background: "rgba(6,6,9,0.97)",
-        display: "flex", flexDirection: "column",
-        backdropFilter: "blur(20px)",
-        zIndex: 20,
-      }}>
+      {/* Scrim — mobile only, shown when drawer is open */}
+      {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
+
+      <aside
+        className={`app-sidebar${isOpen ? " sidebar-open" : ""}`}
+        style={{
+          width: 220, flexShrink: 0, height: "100vh", position: "sticky", top: 0,
+          borderRight: "1px solid var(--border)",
+          background: "rgba(6,6,9,0.97)",
+          display: "flex", flexDirection: "column",
+          backdropFilter: "blur(20px)",
+          zIndex: 20,
+        }}
+      >
         {/* Logo */}
         <div style={{ padding: "1.5rem 1.25rem 1rem", borderBottom: "1px solid var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -86,7 +93,7 @@ export default function Sidebar({ mode, setMode }) {
         {/* Bottom */}
         <div style={{ padding: "0.75rem", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
           <button
-            onClick={() => setShowFeedback(true)}
+            onClick={() => { setShowFeedback(true); onClose?.(); }}
             style={{
               display: "flex", alignItems: "center", gap: "0.7rem",
               padding: "0.6rem 0.85rem", borderRadius: 10, border: "none",
@@ -117,7 +124,7 @@ export default function Sidebar({ mode, setMode }) {
             </div>
           ) : (
             <button
-              onClick={() => setShowAuth(true)}
+              onClick={() => { setShowAuth(true); onClose?.(); }}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
                 padding: "0.65rem 0.85rem", borderRadius: 10,

@@ -71,7 +71,7 @@ const VOICES = [
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const { user } = useAuth();
+  useAuth();
   const [showTerms,   setShowTerms]   = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -190,7 +190,6 @@ export default function App() {
         }
         const msPerLine  = durationMs / lines.length;
         const lineIdx    = Math.min(Math.floor(elapsedMs / msPerLine), lines.length - 1);
-        const lineProgress = (elapsedMs - lineIdx * msPerLine) / msPerLine; // 0→1 within current line
         const phrase     = lines[lineIdx] || "";
 
         const fontSize   = 58;
@@ -550,14 +549,29 @@ export default function App() {
 
   const accentStyle = { color: "var(--accent)" };
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", width: "100%", background: "#060609" }}>
 
-      {/* ── Sidebar — always visible ── */}
-      <Sidebar mode={mode} setMode={setMode} />
+      {/* ── Sidebar ── */}
+      <Sidebar mode={mode} setMode={setMode} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* ── Page content ── */}
-      <div style={{ flex: 1, minWidth: 0, overflowY: "auto", position: "relative" }}>
+      <div className="app-main" style={{ flex: 1, minWidth: 0, overflowY: "auto", position: "relative", display: "flex", flexDirection: "column" }}>
+
+        {/* Mobile header — hidden on desktop via CSS */}
+        <header className="mobile-header">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            style={{ background: "none", border: "none", color: "#9a9490", cursor: "pointer", fontSize: "1.1rem", padding: "0.5rem", lineHeight: 1 }}
+          >☰</button>
+          <span style={{ fontWeight: 800, fontSize: "1.05rem", letterSpacing: "-0.03em" }}>
+            <span style={{ color: "var(--accent)" }}>Edge</span>
+            <span style={{ color: "#f0ede8" }}>Studio</span>
+          </span>
+          <div style={{ width: 32 }} />
+        </header>
 
         {/* Ambient glow */}
         <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>

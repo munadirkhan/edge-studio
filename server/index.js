@@ -263,6 +263,59 @@ app.post("/api/jarvis-suggest", async (req, res) => {
   }
 });
 
+// ── POST /api/feedback ───────────────────────────────────────────────────────
+app.post("/api/feedback", async (req, res) => {
+  const { type, rating, message, userEmail } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: "message required" });
+
+  const entry = {
+    type: type || "General feedback",
+    rating: rating || 0,
+    message: message.trim(),
+    user_email: userEmail || "anonymous",
+    created_at: new Date().toISOString(),
+  };
+
+  // Fire Discord webhook if configured
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (webhookUrl) {
+    const stars = "★".repeat(entry.rating) + "☆".repeat(5 - entry.rating);
+    const embed = {
+      embeds: [{
+        title: `${entry.type}  ${stars}`,
+        description: entry.message,
+        color: 0xc9a96e,
+        footer: { text: entry.user_email },
+        timestamp: entry.created_at,
+      }],
+    };
+    fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(embed),
+    }).catch((err) => console.warn("Discord webhook failed:", err.message));
+  }
+
+  // Also store in Supabase if configured
+  const supabaseUrl  = process.env.SUPABASE_URL;
+  const supabaseKey  = process.env.SUPABASE_SERVICE_KEY;
+  if (supabaseUrl && supabaseKey) {
+    fetch(`${supabaseUrl}/rest/v1/feedback`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": supabaseKey,
+        "Authorization": `Bearer ${supabaseKey}`,
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify(entry),
+    }).catch((err) => console.warn("Supabase feedback insert failed:", err.message));
+  }
+
+  console.log(`[feedback] ${entry.type} | ${stars || entry.rating}★ | ${entry.user_email}: ${entry.message.slice(0, 80)}`);
+  res.json({ ok: true });
+});
+
 // ── GET /video/jobs ───────────────────────────────────────────────────────────
 app.get("/video/jobs", (_req, res) => {
   const list = [...jobs.values()]

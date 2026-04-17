@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 
 const TYPES = ["Bug report", "Feature request", "General feedback", "Other"];
@@ -20,19 +19,23 @@ export default function FeedbackModal({ onClose }) {
     setLoading(true);
     setError("");
     try {
-      const { error: err } = await supabase.from("feedback").insert({
-        type: type || "General feedback",
-        rating,
-        message: text.trim(),
-        user_email: user?.email || "anonymous",
-        created_at: new Date().toISOString(),
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: type || "General feedback",
+          rating,
+          message: text.trim(),
+          userEmail: user?.email || "anonymous",
+        }),
       });
-      if (err) throw err;
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || "Failed to send");
+      }
       setSent(true);
     } catch (err) {
-      // Fallback: open mailto if Supabase table doesn't exist yet
-      window.location.href = `mailto:feedback@edgestudio.app?subject=${encodeURIComponent(`[${type || "Feedback"}] EdgeStudio`)}&body=${encodeURIComponent(text)}`;
-      setSent(true);
+      setError(err.message || "Something went wrong — try again");
     } finally {
       setLoading(false);
     }
@@ -56,28 +59,26 @@ export default function FeedbackModal({ onClose }) {
         ) : (
           <>
             <h3 style={{ margin: "0 0 0.3rem", fontSize: "1rem", fontWeight: 700, color: "#f0ede8" }}>Submit Feedback</h3>
-            <p style={{ margin: "0 0 1.5rem", fontSize: "0.78rem", color: "#4a4745" }}>Your input goes directly to the team.</p>
+            <p style={{ margin: "0 0 1.5rem", fontSize: "0.78rem", color: "#6e6a66" }}>Your input goes directly to the team.</p>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {/* Type */}
               <div>
-                <p style={{ margin: "0 0 0.4rem", fontSize: "0.65rem", fontWeight: 700, color: "#4a4745", letterSpacing: "0.08em" }}>TYPE</p>
+                <p style={{ margin: "0 0 0.4rem", fontSize: "0.65rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.08em" }}>TYPE</p>
                 <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                   {TYPES.map(t => (
                     <button key={t} type="button" onClick={() => setType(t)} style={{
                       fontSize: "0.72rem", fontWeight: 600, padding: "0.3rem 0.7rem", borderRadius: 7,
                       border: `1px solid ${type === t ? "var(--accent-border)" : "var(--border)"}`,
                       background: type === t ? "var(--accent-dim)" : "transparent",
-                      color: type === t ? "var(--accent)" : "#5a5755",
+                      color: type === t ? "var(--accent)" : "#7a7672",
                       cursor: "pointer", fontFamily: "inherit",
                     }}>{t}</button>
                   ))}
                 </div>
               </div>
 
-              {/* Rating */}
               <div>
-                <p style={{ margin: "0 0 0.4rem", fontSize: "0.65rem", fontWeight: 700, color: "#4a4745", letterSpacing: "0.08em" }}>RATING</p>
+                <p style={{ margin: "0 0 0.4rem", fontSize: "0.65rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.08em" }}>RATING</p>
                 <div style={{ display: "flex", gap: "0.3rem" }}>
                   {[1,2,3,4,5].map(n => (
                     <button key={n} type="button"
@@ -90,9 +91,8 @@ export default function FeedbackModal({ onClose }) {
                 </div>
               </div>
 
-              {/* Message */}
               <div>
-                <p style={{ margin: "0 0 0.4rem", fontSize: "0.65rem", fontWeight: 700, color: "#4a4745", letterSpacing: "0.08em" }}>YOUR FEEDBACK</p>
+                <p style={{ margin: "0 0 0.4rem", fontSize: "0.65rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.08em" }}>YOUR FEEDBACK</p>
                 <textarea
                   className="input-base"
                   rows={4}
