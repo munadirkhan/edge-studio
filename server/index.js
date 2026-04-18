@@ -276,10 +276,11 @@ app.post("/api/feedback", async (req, res) => {
     created_at: new Date().toISOString(),
   };
 
+  const stars = "★".repeat(entry.rating) + "☆".repeat(Math.max(0, 5 - entry.rating));
+
   // Fire Discord webhook if configured
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (webhookUrl) {
-    const stars = "★".repeat(entry.rating) + "☆".repeat(5 - entry.rating);
     const embed = {
       embeds: [{
         title: `${entry.type}  ${stars}`,
@@ -312,7 +313,7 @@ app.post("/api/feedback", async (req, res) => {
     }).catch((err) => console.warn("Supabase feedback insert failed:", err.message));
   }
 
-  console.log(`[feedback] ${entry.type} | ${stars || entry.rating}★ | ${entry.user_email}: ${entry.message.slice(0, 80)}`);
+  console.log(`[feedback] ${entry.type} | ${stars} | ${entry.user_email}: ${entry.message.slice(0, 80)}`);
   res.json({ ok: true });
 });
 

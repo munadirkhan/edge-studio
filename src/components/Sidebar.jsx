@@ -10,7 +10,7 @@ const NAV = [
   { id: "projects",icon: "▦", label: "Projects" },
 ];
 
-export default function Sidebar({ mode, setMode, isOpen, onClose }) {
+export default function Sidebar({ mode, setMode, isMobile, isOpen, onClose }) {
   const { user, signOut } = useAuth();
   const [showFeedback, setShowFeedback] = useState(false);
   const [showAuth, setShowAuth]         = useState(false);
@@ -30,14 +30,18 @@ export default function Sidebar({ mode, setMode, isOpen, onClose }) {
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
 
       <aside
-        className={`app-sidebar${isOpen ? " sidebar-open" : ""}`}
         style={{
-          width: 220, flexShrink: 0, height: "100vh", position: "sticky", top: 0,
+          width: 220, flexShrink: 0,
+          height: isMobile ? "100dvh" : "100vh",
+          position: isMobile ? "fixed" : "sticky",
+          top: 0, left: 0,
           borderRight: "1px solid var(--border)",
           background: "rgba(6,6,9,0.97)",
           display: "flex", flexDirection: "column",
           backdropFilter: "blur(20px)",
-          zIndex: 20,
+          zIndex: 50,
+          transform: isMobile && !isOpen ? "translateX(-100%)" : "translateX(0)",
+          transition: "transform 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}
       >
         {/* Logo */}

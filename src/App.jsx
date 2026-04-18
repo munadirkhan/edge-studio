@@ -549,19 +549,26 @@ export default function App() {
 
   const accentStyle = { color: "var(--accent)" };
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", width: "100%", background: "#060609" }}>
 
       {/* ── Sidebar ── */}
-      <Sidebar mode={mode} setMode={setMode} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar mode={mode} setMode={setMode} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* ── Page content ── */}
       <div className="app-main" style={{ flex: 1, minWidth: 0, overflowY: "auto", position: "relative", display: "flex", flexDirection: "column" }}>
 
-        {/* Mobile header — hidden on desktop via CSS */}
-        <header className="mobile-header">
+        {/* Mobile header */}
+        <header className="mobile-header" style={{ display: isMobile ? "flex" : "none" }}>
           <button
             onClick={() => setSidebarOpen(true)}
             style={{ background: "none", border: "none", color: "#9a9490", cursor: "pointer", fontSize: "1.1rem", padding: "0.5rem", lineHeight: 1 }}
