@@ -20,4 +20,5 @@ COPY server/ ./server/
 
 EXPOSE 3001
 
-CMD ["node", "server/index.js"]
+# Update yt-dlp at every container start so it's never stale
+CMD ["sh", "-c", "pip3 install --upgrade yt-dlp --break-system-packages --quiet 2>&1 | tail -1 && node server/index.js"]
