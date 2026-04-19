@@ -30,22 +30,32 @@ function stageToPercent(stage = "") {
 }
 
 // ── Accordion row ─────────────────────────────────────────────────────────────
-function Section({ icon, label, children }) {
+function Section({ icon, label, badge, children }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+    <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
-          width: "100%", display: "flex", alignItems: "center", gap: "0.6rem",
+          width: "100%", display: "flex", alignItems: "center", gap: "0.65rem",
           padding: "0.85rem 0", background: "none", border: "none",
           color: "#f0ede8", cursor: "pointer", fontFamily: "inherit",
-          fontSize: "0.9rem", fontWeight: 600,
+          fontSize: "0.88rem", fontWeight: 600, transition: "opacity 0.15s",
         }}
       >
-        <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>{icon}</span>
-        <span>{label}</span>
-        <span style={{ marginLeft: "auto", fontSize: "0.7rem", opacity: 0.45 }}>{open ? "▲" : "▼"}</span>
+        <span style={{
+          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+          background: open ? "var(--accent-dim)" : "rgba(255,255,255,0.04)",
+          border: `1px solid ${open ? "var(--accent-border)" : "var(--border)"}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "0.75rem", color: open ? "var(--accent)" : "#6e6a66",
+          transition: "all 0.2s",
+        }}>{icon}</span>
+        <span style={{ color: open ? "#f0ede8" : "#b0a8a0" }}>{label}</span>
+        {badge && !open && (
+          <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "#5a5755", background: "rgba(255,255,255,0.04)", borderRadius: 5, padding: "0.15rem 0.5rem", border: "1px solid rgba(255,255,255,0.07)" }}>{badge}</span>
+        )}
+        <span style={{ marginLeft: badge && !open ? "0.25rem" : "auto", fontSize: "0.55rem", color: "#4e4b48", display: "inline-block", transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▼</span>
       </button>
       {open && <div style={{ paddingBottom: "1rem" }}>{children}</div>}
     </div>
@@ -74,17 +84,22 @@ function Toggle({ value, onChange }) {
 
 // ── Slider row ────────────────────────────────────────────────────────────────
 function SliderRow({ label, value, min = 0, max = 100, onChange, unit = "%" }) {
+  const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div style={{ marginBottom: "0.7rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
-        <span style={{ fontSize: "0.78rem", color: "#9a9490" }}>{label}</span>
-        <span style={{ fontSize: "0.78rem", color: "#c9a96e", fontWeight: 600 }}>{value}{unit}</span>
+    <div style={{ marginBottom: "0.85rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.45rem" }}>
+        <span style={{ fontSize: "0.75rem", color: "#7a7672", fontWeight: 500 }}>{label}</span>
+        <span style={{ fontSize: "0.75rem", color: "var(--accent)", fontWeight: 700, minWidth: 38, textAlign: "right" }}>{value}{unit}</span>
       </div>
-      <input
-        type="range" min={min} max={max} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: "var(--accent)" }}
-      />
+      <div style={{ position: "relative", height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--accent), #e0c080)", borderRadius: 2, transition: "width 0.05s" }} />
+        <input
+          type="range" min={min} max={max} value={value}
+          onChange={e => onChange(Number(e.target.value))}
+          style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", opacity: 0, cursor: "pointer", height: 20, margin: 0 }}
+        />
+        <div style={{ position: "absolute", top: "50%", left: `${pct}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: "var(--accent)", border: "2px solid #060609", boxShadow: "0 0 6px rgba(201,169,110,0.5)", pointerEvents: "none", transition: "left 0.05s" }} />
+      </div>
     </div>
   );
 }
@@ -509,131 +524,148 @@ export default function ClipStudio() {
         {/* ── Step 2: Text & Position ───────────────────────────────────── */}
         <div style={{ marginBottom: "1.25rem" }}>
           <p style={{ margin: "0 0 0.6rem", fontSize: "0.62rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.09em" }}>STEP 2</p>
-          <div className="glass-card" style={{ padding: "1.1rem" }}>
-            <p style={{ margin: "0 0 0.9rem", fontWeight: 700, fontSize: "0.95rem" }}>Video Text and Position</p>
-
-            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem", alignItems: "flex-start" }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 0.3rem", fontSize: "0.68rem", color: "#6e6a66", fontWeight: 600 }}>Title</p>
-                <input
-                  className="input-base"
-                  style={{ padding: "0.55rem 0.8rem", fontSize: "0.85rem" }}
-                  placeholder="Enter video title"
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 0.3rem", fontSize: "0.68rem", color: "#6e6a66", fontWeight: 600 }}>Title Position</p>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <input type="range" min={5} max={50} value={titleY} onChange={e => setTitleY(Number(e.target.value))}
-                    style={{ flex: 1, accentColor: "var(--accent)" }} />
-                  <span style={{ fontSize: "0.7rem", color: "#c9a96e", minWidth: 28 }}>{titleY}%</span>
-                </div>
-              </div>
+          <div className="glass-card" style={{ padding: "1.25rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.1rem" }}>
+              <span style={{ fontSize: "0.8rem" }}>Tt</span>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem" }}>Text Overlays</p>
             </div>
 
-            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.9rem", alignItems: "flex-start" }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 0.3rem", fontSize: "0.68rem", color: "#6e6a66", fontWeight: 600 }}>Subtitle</p>
-                <textarea
-                  className="input-base"
-                  style={{ padding: "0.55rem 0.8rem", fontSize: "0.82rem", resize: "vertical", minHeight: 60 }}
-                  placeholder="Enter video subtitle"
-                  value={subtitle}
-                  onChange={e => setSubtitle(e.target.value)}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 0.3rem", fontSize: "0.68rem", color: "#6e6a66", fontWeight: 600 }}>Subtitle Position</p>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <input type="range" min={50} max={95} value={subtitleY} onChange={e => setSubtitleY(Number(e.target.value))}
-                    style={{ flex: 1, accentColor: "var(--accent)" }} />
-                  <span style={{ fontSize: "0.7rem", color: "#c9a96e", minWidth: 28 }}>{subtitleY}%</span>
-                </div>
-              </div>
+            {/* Title row */}
+            <div style={{ marginBottom: "0.5rem" }}>
+              <label style={{ fontSize: "0.68rem", color: "#6e6a66", fontWeight: 700, letterSpacing: "0.06em", display: "block", marginBottom: "0.35rem" }}>TITLE</label>
+              <input
+                className="input-base"
+                style={{ padding: "0.65rem 0.9rem", fontSize: "0.88rem", marginBottom: "0.55rem" }}
+                placeholder="Bold hook text at the top..."
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+              />
+              <SliderRow label="Vertical position" value={titleY} min={5} max={50} onChange={setTitleY} />
             </div>
 
-            <SliderRow label="Video Position" value={videoPos} onChange={setVideoPos} />
-            <SliderRow label="Video Scale" value={videoScale} min={80} max={200} onChange={setVideoScale} />
+            <div style={{ height: 1, background: "var(--border)", margin: "0.5rem 0 1rem" }} />
+
+            {/* Subtitle row */}
+            <div style={{ marginBottom: "0.5rem" }}>
+              <label style={{ fontSize: "0.68rem", color: "#6e6a66", fontWeight: 700, letterSpacing: "0.06em", display: "block", marginBottom: "0.35rem" }}>SUBTITLE / CAPTION</label>
+              <textarea
+                className="input-base"
+                style={{ padding: "0.65rem 0.9rem", fontSize: "0.85rem", resize: "none", minHeight: 56, marginBottom: "0.55rem" }}
+                placeholder="Supporting text near the bottom..."
+                value={subtitle}
+                onChange={e => setSubtitle(e.target.value)}
+              />
+              <SliderRow label="Vertical position" value={subtitleY} min={50} max={95} onChange={setSubtitleY} />
+            </div>
+
+            <div style={{ height: 1, background: "var(--border)", margin: "0.5rem 0 1rem" }} />
+
+            {/* Video framing */}
+            <label style={{ fontSize: "0.68rem", color: "#6e6a66", fontWeight: 700, letterSpacing: "0.06em", display: "block", marginBottom: "0.8rem" }}>VIDEO FRAMING</label>
+            <SliderRow label="Vertical pan" value={videoPos} onChange={setVideoPos} />
+            <SliderRow label="Scale" value={videoScale} min={80} max={200} onChange={setVideoScale} />
           </div>
         </div>
 
         {/* ── Step 3: Caption Style ─────────────────────────────────────── */}
         <div style={{ marginBottom: "1.25rem" }}>
           <p style={{ margin: "0 0 0.6rem", fontSize: "0.62rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.09em" }}>STEP 3</p>
-          <div className="glass-card" style={{ padding: "1.1rem" }}>
-            <p style={{ margin: "0 0 0.75rem", fontWeight: 700, fontSize: "0.95rem" }}>Caption Style</p>
+          <div className="glass-card" style={{ padding: "1.25rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+              <span style={{ fontSize: "0.8rem" }}>CC</span>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem" }}>Caption Style</p>
+            </div>
 
-            <Section icon="T" label="Style">
-              <p style={{ margin: "0 0 0.5rem", fontSize: "0.72rem", color: "#6e6a66" }}>Choose a font</p>
-              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.85rem" }}>
+            <Section icon="T" label="Font & Color" badge={FONTS[font]?.label}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "1rem" }}>
                 {Object.entries(FONTS).map(([key, f]) => (
                   <button
                     key={key}
                     onClick={() => setFont(key)}
                     style={{
-                      flex: 1, padding: "0.7rem", borderRadius: 8,
-                      border: `2px solid ${font === key ? "var(--accent)" : "var(--border)"}`,
-                      background: font === key ? "rgba(201,169,110,0.08)" : "rgba(255,255,255,0.03)",
-                      color: "#f0ede8", cursor: "pointer",
-                      fontFamily: f.css, fontWeight: f.weight, fontSize: "0.9rem",
-                      letterSpacing: "0.04em", transition: "all 0.15s",
+                      padding: "0.85rem 0.5rem", borderRadius: 10,
+                      border: `1.5px solid ${font === key ? "var(--accent)" : "var(--border)"}`,
+                      background: font === key ? "rgba(201,169,110,0.08)" : "rgba(255,255,255,0.02)",
+                      color: font === key ? "var(--accent)" : "#9a9490",
+                      cursor: "pointer", fontFamily: f.css, fontWeight: f.weight,
+                      fontSize: "1rem", letterSpacing: "0.04em", transition: "all 0.15s",
                     }}
                   >{f.label}</button>
                 ))}
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "0.78rem", color: "#9a9490" }}>Text Color</span>
-                <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)}
-                  style={{ width: 40, height: 28, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer", background: "none" }} />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.65rem 0.85rem", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)" }}>
+                <span style={{ fontSize: "0.82rem", color: "#9a9490", fontWeight: 500 }}>Caption color</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 4, background: textColor, border: "1px solid rgba(255,255,255,0.15)" }} />
+                  <span style={{ fontSize: "0.72rem", color: "#6e6a66" }}>{textColor.toUpperCase()}</span>
+                  <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)}
+                    style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer", background: "none" }} />
+                </div>
               </div>
             </Section>
 
-            <Section icon="🎨" label="Highlight">
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>Word Highlighting</span>
+            <Section icon="◈" label="Word Highlight" badge={wordHighlight ? (boxHighlight ? "Box" : "Word") : "Off"}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.7rem 0" }}>
+                  <div>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Word Highlighting</span>
+                    <p style={{ margin: "0.15rem 0 0", fontSize: "0.68rem", color: "#5a5755" }}>Colour the current word as audio plays</p>
+                  </div>
                   <Toggle value={wordHighlight} onChange={setWordHighlight} />
                 </div>
                 {wordHighlight && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: "0.78rem", color: "#9a9490" }}>Word Color</span>
-                    <input type="color" value={highlightColor} onChange={e => setHighlightColor(e.target.value)}
-                      style={{ width: 40, height: 28, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer" }} />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0.85rem", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", marginBottom: "0.65rem" }}>
+                    <span style={{ fontSize: "0.82rem", color: "#9a9490", fontWeight: 500 }}>Highlight color</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                      <div style={{ width: 18, height: 18, borderRadius: 4, background: highlightColor, border: "1px solid rgba(255,255,255,0.15)" }} />
+                      <input type="color" value={highlightColor} onChange={e => setHighlightColor(e.target.value)}
+                        style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer", background: "none" }} />
+                    </div>
                   </div>
                 )}
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: "0.85rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>Box Highlighting</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.7rem 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Box Highlight</span>
+                    <p style={{ margin: "0.15rem 0 0", fontSize: "0.68rem", color: "#5a5755" }}>Dark box behind highlighted word</p>
+                  </div>
                   <Toggle value={boxHighlight} onChange={v => { setBoxHighlight(v); if (v) setWordHighlight(true); }} />
                 </div>
               </div>
             </Section>
 
-            <Section icon="✦" label="Effects">
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>Rotation Effects</span>
+            <Section icon="✦" label="Effects" badge={[rotEffect && "Rotation", scaleEffect && "Scale"].filter(Boolean).join(" · ") || "None"}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.7rem 0" }}>
+                  <div>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Rotation</span>
+                    <p style={{ margin: "0.15rem 0 0", fontSize: "0.68rem", color: "#5a5755" }}>Slight tilt on each word pop</p>
+                  </div>
                   <Toggle value={rotEffect} onChange={setRotEffect} />
                 </div>
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: "0.85rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>Scale Effects</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.7rem 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Scale Bounce</span>
+                    <p style={{ margin: "0.15rem 0 0", fontSize: "0.68rem", color: "#5a5755" }}>Word pops in with a scale effect</p>
+                  </div>
                   <Toggle value={scaleEffect} onChange={setScaleEffect} />
                 </div>
               </div>
             </Section>
 
-            {/* Style preview */}
-            <div style={{ marginTop: "1rem", borderRadius: 10, background: "#fff", height: 110, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+            {/* Caption preview — dark background like a real video */}
+            <div style={{ marginTop: "1rem", borderRadius: 10, background: "linear-gradient(135deg, #0d0d1a 0%, #1a0d0d 100%)", height: 100, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.5) 100%)" }} />
               <span style={{
-                fontFamily: FONTS[font]?.css,
-                fontWeight: FONTS[font]?.weight,
-                fontSize: "1.6rem",
-                letterSpacing: "0.04em",
-                color: boxHighlight || wordHighlight ? highlightColor : textColor === "#ffffff" ? "#000" : textColor,
-                WebkitTextStroke: boxHighlight ? "2px #000" : "1px #000",
+                position: "relative",
+                fontFamily: FONTS[font]?.css, fontWeight: FONTS[font]?.weight,
+                fontSize: "1.5rem", letterSpacing: "0.04em",
+                color: wordHighlight || boxHighlight ? highlightColor : textColor,
+                textShadow: "0 2px 12px rgba(0,0,0,0.9)",
+                background: boxHighlight ? "rgba(0,0,0,0.75)" : "transparent",
+                padding: boxHighlight ? "0.15rem 0.55rem" : 0,
+                borderRadius: boxHighlight ? 5 : 0,
               }}>
-                USING CLIP STUDIO
+                PREVIEW TEXT
               </span>
             </div>
           </div>
@@ -642,45 +674,75 @@ export default function ClipStudio() {
         {/* ── Step 4: Aspect Ratio ──────────────────────────────────────── */}
         <div style={{ marginBottom: "1.25rem" }}>
           <p style={{ margin: "0 0 0.6rem", fontSize: "0.62rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.09em" }}>STEP 4</p>
-          <div className="glass-card" style={{ padding: "1.1rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.9rem" }}>
-              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem" }}>Select Aspect Ratio</p>
+          <div className="glass-card" style={{ padding: "1.25rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.1rem" }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem" }}>Canvas Size</p>
               <span style={{ fontSize: "0.55rem", fontWeight: 700, letterSpacing: "0.08em", background: "var(--accent-dim)", border: "1px solid var(--accent-border)", color: "var(--accent)", borderRadius: 5, padding: "0.15rem 0.4rem" }}>BETA</span>
             </div>
             <div style={{ display: "flex", gap: "0.75rem" }}>
-              {ASPECT_RATIOS.map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => setAspectRatio(r.id)}
-                  style={{
-                    flex: 1, padding: "1rem 0.5rem", borderRadius: 12,
-                    border: `2px solid ${aspectRatio === r.id ? "var(--accent)" : "var(--border)"}`,
-                    background: aspectRatio === r.id ? "rgba(201,169,110,0.08)" : "rgba(255,255,255,0.02)",
-                    cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
-                  }}
-                >
-                  <span style={{ fontSize: r.id === "9:16" ? "2.5rem" : "1.5rem", opacity: aspectRatio === r.id ? 1 : 0.4, color: aspectRatio === r.id ? "var(--accent)" : "#f0ede8" }}>
-                    {r.id === "9:16" ? "▯" : "▭"}
-                  </span>
-                  <span style={{ fontWeight: 700, fontSize: "0.95rem", color: aspectRatio === r.id ? "var(--accent)" : "#f0ede8" }}>{r.label}</span>
-                  <span style={{ fontSize: "0.65rem", color: "#6e6a66" }}>{r.sub}</span>
-                </button>
-              ))}
+              {ASPECT_RATIOS.map(r => {
+                const isSel = aspectRatio === r.id;
+                const is916 = r.id === "9:16";
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => setAspectRatio(r.id)}
+                    style={{
+                      flex: 1, padding: "1.25rem 0.75rem", borderRadius: 12,
+                      border: `1.5px solid ${isSel ? "var(--accent)" : "var(--border)"}`,
+                      background: isSel ? "rgba(201,169,110,0.07)" : "rgba(255,255,255,0.02)",
+                      cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: "0.85rem",
+                    }}
+                  >
+                    {/* CSS proportional rectangle */}
+                    <div style={{
+                      width: is916 ? 28 : 54,
+                      height: is916 ? 50 : 30,
+                      borderRadius: 4,
+                      border: `2px solid ${isSel ? "var(--accent)" : "#4e4b48"}`,
+                      background: isSel ? "rgba(201,169,110,0.15)" : "rgba(255,255,255,0.04)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "all 0.15s",
+                      flexShrink: 0,
+                    }}>
+                      {isSel && <div style={{ width: "40%", height: "40%", borderRadius: "50%", background: "var(--accent)", opacity: 0.6 }} />}
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontWeight: 800, fontSize: "1rem", color: isSel ? "var(--accent)" : "#f0ede8", letterSpacing: "-0.02em" }}>{r.label}</div>
+                      <div style={{ fontSize: "0.62rem", color: "#5a5755", marginTop: "0.2rem" }}>{r.sub}</div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
         {/* ── Export button ─────────────────────────────────────────────── */}
         {videoSrc && (
-          <button
-            className="btn-accent"
-            style={{ width: "100%", padding: "1rem", fontSize: "1rem", borderRadius: 12 }}
-            onClick={handleExport}
-            disabled={exporting}
-          >
-            {exporting ? `Exporting... ${exportProgress}%` : "↓ Export Video"}
-          </button>
+          <div style={{ marginTop: "0.5rem" }}>
+            <button
+              className="btn-accent"
+              style={{ width: "100%", padding: "1.1rem", fontSize: "1rem", borderRadius: 12, fontWeight: 800, letterSpacing: "-0.01em", boxShadow: exporting ? "none" : "0 4px 28px rgba(201,169,110,0.25)", position: "relative", overflow: "hidden" }}
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? (
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.6rem" }}>
+                  <span style={{ display: "inline-block", width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(10,8,6,0.3)", borderTopColor: "#0a0806", animation: "spin 0.8s linear infinite" }} />
+                  Exporting {exportProgress}%
+                </span>
+              ) : "↓ Export Video"}
+            </button>
+            {exporting && (
+              <div style={{ marginTop: "0.5rem" }}>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${exportProgress}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
