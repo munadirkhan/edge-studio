@@ -40,11 +40,11 @@ function generateLogEntry(templateName, status) {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DURATIONS = [
-  { label: "8s",    value: 8  },
-  { label: "15s",   value: 15 },
-  { label: "30s",   value: 30 },
-  { label: "45s",   value: 45 },
-  { label: "1 min", value: 60 },
+  { label: "8s",    value: 8,  desc: "Hook"   },
+  { label: "15s",   value: 15, desc: "Short"  },
+  { label: "30s",   value: 30, desc: "Reel"   },
+  { label: "45s",   value: 45, desc: "Story"  },
+  { label: "1 min", value: 60, desc: "Long"   },
 ];
 
 const MOTION_EFFECTS = [
@@ -812,36 +812,37 @@ export default function App() {
               <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
 
                 {/* JARVIS idea box */}
-                <div className="glass-card" style={{ padding: "1.25rem" }}>
+                <div className="glass-card" style={{ padding: "1.25rem", borderColor: jarvisBusy ? "rgba(74,222,128,0.25)" : "var(--border)", boxShadow: jarvisBusy ? "0 0 0 1px rgba(74,222,128,0.1), 0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)" : undefined, transition: "border-color 0.3s, box-shadow 0.3s" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.85rem" }}>
-                    <span style={{ ...accentStyle, fontSize: "1rem" }}>✦</span>
-                    <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#a09888", letterSpacing: "0.06em" }}>ASK JARVIS</span>
+                    <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: jarvisBusy ? "#4ade80" : "#4ade80", display: "inline-block", flexShrink: 0 }} />
+                    <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.1em" }}>JARVIS AI</span>
+                    <span style={{ marginLeft: "auto", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.06em", background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ade80", borderRadius: 5, padding: "0.15rem 0.45rem" }}>
+                      {jarvisBusy ? "THINKING" : "ONLINE"}
+                    </span>
                   </div>
                   <div style={{ display: "flex", gap: "0.6rem" }}>
                     <input
                       className="input-base"
-                      style={{ padding: "0.7rem 1rem", fontSize: "0.875rem" }}
-                      placeholder="Describe your idea — discipline, sacrifice, grinding..."
+                      style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
+                      placeholder="Describe your idea — discipline, sacrifice, mindset..."
                       value={jarvisIdea}
                       onChange={(e) => setJarvisIdea(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleJarvisSuggest()}
                     />
                     <button
                       className="btn-accent"
-                      style={{ padding: "0.7rem 1.1rem", fontSize: "0.8rem", whiteSpace: "nowrap", flexShrink: 0 }}
+                      style={{ padding: "0.75rem 1.2rem", fontSize: "0.8rem", whiteSpace: "nowrap", flexShrink: 0 }}
                       onClick={handleJarvisSuggest}
                       disabled={!jarvisIdea.trim() || jarvisBusy}
                     >
-                      {jarvisBusy ? "Thinking…" : "Fill →"}
+                      {jarvisBusy ? "…" : "Fill →"}
                     </button>
                   </div>
                   {jarvisError ? (
-                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#f87171" }}>
-                      ✕ {jarvisError}
-                    </p>
+                    <p style={{ margin: "0.55rem 0 0", fontSize: "0.7rem", color: "#f87171" }}>✕ {jarvisError}</p>
                   ) : (
-                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#6e6a66" }}>
-                      JARVIS will craft your message — or write your own below.
+                    <p style={{ margin: "0.55rem 0 0", fontSize: "0.7rem", color: "#6e6a66" }}>
+                      {jarvisBusy ? "Crafting your message…" : "JARVIS will write your script — or type your own below."}
                     </p>
                   )}
                 </div>
@@ -855,46 +856,70 @@ export default function App() {
                       fontSize: "0.7rem", fontWeight: 700, ...accentStyle, flexShrink: 0,
                     }}>1</span>
                     <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Your Message</span>
+                    <span style={{ marginLeft: "auto", fontSize: "0.68rem", color: userMessage.length > 450 ? "#f87171" : "#4e4b48" }}>
+                      {userMessage.length}<span style={{ color: "#3a3836" }}>/500</span>
+                    </span>
                   </div>
                   <textarea
                     className="input-base"
-                    style={{ padding: "0.85rem 1rem", fontSize: "0.9rem", resize: "none", lineHeight: 1.6 }}
+                    style={{ padding: "0.85rem 1rem", fontSize: "0.9rem", resize: "none", lineHeight: 1.65 }}
                     rows={5}
-                    placeholder="The message that drives your video..."
+                    maxLength={500}
+                    placeholder="Write what you want your audience to feel, believe, or do..."
                     value={userMessage}
                     onChange={(e) => setUserMessage(e.target.value)}
                   />
+                  {!userMessage && (
+                    <p style={{ margin: "0.5rem 0 0", fontSize: "0.68rem", color: "#4e4b48" }}>
+                      Pro tip: speak directly to the viewer — "You need to hear this..."
+                    </p>
+                  )}
                 </div>
 
                 {/* Duration picker */}
                 <div className="glass-card" style={{ padding: "1.25rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.85rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
                     <span style={{
                       width: 26, height: 26, borderRadius: 8, background: "var(--surface-hover)",
                       border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: "0.7rem", fontWeight: 700, color: "#6b6568", flexShrink: 0,
-                    }}>⏱</span>
+                    }}>2</span>
                     <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Video Duration</span>
                   </div>
-                  <div style={{ display: "flex" }}>
-                    {DURATIONS.map((d) => (
-                      <button
-                        key={d.value}
-                        className={`segment-btn${clipDuration === d.value ? " active" : ""}`}
-                        onClick={() => setClipDuration(d.value)}
-                      >
-                        {d.label}
-                      </button>
-                    ))}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem" }}>
+                    {DURATIONS.map((d) => {
+                      const isActive = clipDuration === d.value;
+                      return (
+                        <button
+                          key={d.value}
+                          onClick={() => setClipDuration(d.value)}
+                          style={{
+                            padding: "0.7rem 0.25rem",
+                            borderRadius: 10,
+                            border: `1px solid ${isActive ? "var(--accent-border)" : "var(--border)"}`,
+                            background: isActive ? "var(--accent-dim)" : "rgba(255,255,255,0.02)",
+                            color: isActive ? "var(--accent)" : "#6b6568",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            textAlign: "center",
+                            transition: "all 0.15s",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "0.2rem",
+                          }}
+                        >
+                          <span style={{ fontSize: "1rem", fontWeight: 800, letterSpacing: "-0.03em" }}>{d.label}</span>
+                          <span style={{ fontSize: "0.58rem", fontWeight: 600, letterSpacing: "0.04em", opacity: 0.7 }}>{d.desc}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <p style={{ margin: "0.5rem 0 0", fontSize: "0.7rem", color: "#6e6a66" }}>
-                    Narration auto-extends if longer than selected duration.
-                  </p>
                 </div>
 
                 <button
                   className="btn-accent"
-                  style={{ width: "100%", padding: "0.9rem", fontSize: "0.95rem" }}
+                  style={{ width: "100%", padding: "1rem", fontSize: "0.95rem", fontWeight: 700, letterSpacing: "-0.01em", boxShadow: userMessage.trim() ? "0 4px 24px rgba(201,169,110,0.2)" : undefined }}
                   onClick={() => userMessage.trim() && setStep(2)}
                   disabled={!userMessage.trim()}
                 >
@@ -909,36 +934,50 @@ export default function App() {
 
                 {/* Template grid */}
                 <div className="glass-card" style={{ padding: "1.25rem" }}>
-                  <p style={{ margin: "0 0 1rem", fontSize: "0.75rem", fontWeight: 700, color: "#6b6568", letterSpacing: "0.06em" }}>
-                    VISUAL STYLE
-                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
+                    <span style={{
+                      width: 26, height: 26, borderRadius: 8, background: "var(--accent-dim)",
+                      border: "1px solid var(--accent-border)", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "0.7rem", fontWeight: 700, ...accentStyle, flexShrink: 0,
+                    }}>3</span>
+                    <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Visual Style</span>
+                    {selectedTemplate && (
+                      <span style={{ marginLeft: "auto", fontSize: "0.68rem", fontWeight: 600, color: "var(--accent)" }}>
+                        {selectedTemplate.preview} {selectedTemplate.name}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.65rem" }}>
-                    {TEMPLATES.map((t) => (
-                      <div
-                        key={t.id}
-                        className={`template-card${selectedTemplate?.id === t.id ? " selected" : ""}`}
-                        style={{ background: selectedTemplate?.id === t.id ? undefined : t.bg }}
-                        onClick={() => setSelectedTemplate(t)}
-                      >
-                        <span style={{ fontSize: 26 }}>{t.preview}</span>
-                        <span style={{ fontSize: "0.75rem", fontWeight: 600, color: selectedTemplate?.id === t.id ? "var(--accent)" : t.textColor, opacity: 0.9 }}>
-                          {t.name}
-                        </span>
-                        {selectedTemplate?.id === t.id && (
-                          <span style={{ fontSize: "0.65rem", ...accentStyle, fontWeight: 700 }}>✓ Selected</span>
-                        )}
-                      </div>
-                    ))}
+                    {TEMPLATES.map((t) => {
+                      const isSel = selectedTemplate?.id === t.id;
+                      return (
+                        <div
+                          key={t.id}
+                          className={`template-card${isSel ? " selected" : ""}`}
+                          style={{ background: isSel ? undefined : t.bg, padding: "1.1rem 0.6rem", gap: "0.55rem" }}
+                          onClick={() => setSelectedTemplate(t)}
+                        >
+                          <span style={{ fontSize: 32 }}>{t.preview}</span>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: isSel ? "var(--accent)" : t.textColor }}>
+                            {t.name}
+                          </span>
+                          {isSel && (
+                            <span style={{ fontSize: "0.6rem", ...accentStyle, fontWeight: 700, letterSpacing: "0.06em" }}>✓ SELECTED</span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Motion + Voice row */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
                   {[
-                    { label: "Motion", items: MOTION_EFFECTS, value: motionEffect, setValue: setMotionEffect },
-                    { label: "Intensity", items: MOTION_INTENSITIES, value: motionIntensity, setValue: setMotionIntensity },
+                    { label: "Motion", icon: "4", items: MOTION_EFFECTS, value: motionEffect, setValue: setMotionEffect },
+                    { label: "Intensity", icon: "5", items: MOTION_INTENSITIES, value: motionIntensity, setValue: setMotionIntensity },
                     {
                       label: "Voice",
+                      icon: "6",
                       custom: (
                         <select
                           className="input-base"
@@ -952,11 +991,18 @@ export default function App() {
                         </select>
                       ),
                     },
-                  ].map(({ label, items, value, setValue, custom }) => (
+                  ].map(({ label, icon, items, value, setValue, custom }) => (
                     <div key={label} className="glass-card" style={{ padding: "1rem" }}>
-                      <p style={{ margin: "0 0 0.7rem", fontSize: "0.7rem", fontWeight: 700, color: "#6b6568", letterSpacing: "0.06em" }}>
-                        {label.toUpperCase()}
-                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                        <span style={{
+                          width: 20, height: 20, borderRadius: 6, background: "var(--surface-hover)",
+                          border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: "0.6rem", fontWeight: 700, color: "#6b6568", flexShrink: 0,
+                        }}>{icon}</span>
+                        <p style={{ margin: 0, fontSize: "0.7rem", fontWeight: 700, color: "#6b6568", letterSpacing: "0.06em" }}>
+                          {label.toUpperCase()}
+                        </p>
+                      </div>
                       {custom || (
                         <div style={{ display: "flex", flexWrap: "wrap" }}>
                           {items.map((item) => (
@@ -995,13 +1041,16 @@ export default function App() {
                   {!generating ? (
                     /* Pre-generate confirmation */
                     <div style={{ textAlign: "center" }}>
-                      <p style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", margin: "0 0 0.6rem", letterSpacing: "0.1em", fontWeight: 700 }}>READY TO GENERATE</p>
-                      <p style={{ fontSize: "1.5rem", fontWeight: 800, margin: "0 0 0.3rem", color: selectedTemplate?.accentColor || "var(--accent)", letterSpacing: "-0.02em" }}>
-                        {selectedTemplate?.preview} {selectedTemplate?.name}
+                      <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", margin: "0 0 1rem", letterSpacing: "0.12em", fontWeight: 700 }}>READY TO GENERATE</p>
+                      <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>{selectedTemplate?.preview}</div>
+                      <p style={{ fontSize: "1.35rem", fontWeight: 800, margin: "0 0 0.5rem", color: selectedTemplate?.accentColor || "var(--accent)", letterSpacing: "-0.02em" }}>
+                        {selectedTemplate?.name}
                       </p>
-                      <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-tertiary)" }}>
-                        AI image · Voice narration · Captions
-                      </p>
+                      <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0" }}>
+                        {["AI Image", "Voice Narration", "Captions", `${clipDuration}s`].map((tag) => (
+                          <span key={tag} style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.04em", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 20, padding: "0.2rem 0.7rem", color: "#6e6a66" }}>{tag}</span>
+                        ))}
+                      </div>
                       {generateStatus?.startsWith("Error") && (
                         <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#f87171" }}>{generateStatus}</p>
                       )}
@@ -1070,14 +1119,14 @@ export default function App() {
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "0.75rem" }}>
-                  <button className="btn-ghost" style={{ flex: 1, padding: "0.85rem", fontSize: "0.875rem" }} onClick={() => !generating && setStep(2)} disabled={generating}>← Back</button>
+                  <button className="btn-ghost" style={{ flex: 1, padding: "0.9rem", fontSize: "0.875rem" }} onClick={() => !generating && setStep(2)} disabled={generating}>← Back</button>
                   <button
                     className="btn-accent"
-                    style={{ flex: 2, padding: "0.85rem", fontSize: "0.875rem" }}
+                    style={{ flex: 2, padding: "0.9rem", fontSize: "0.95rem", fontWeight: 700, letterSpacing: "-0.01em", boxShadow: !generating ? "0 4px 28px rgba(201,169,110,0.25)" : undefined }}
                     onClick={handleGenerate}
                     disabled={generating}
                   >
-                    {generating ? "✦ Generating…" : "✦ Generate"}
+                    {generating ? "✦ Generating…" : "✦ Generate Video"}
                   </button>
                 </div>
               </div>
