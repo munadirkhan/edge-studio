@@ -397,12 +397,92 @@ export default function ClipStudio() {
       {/* ════ LEFT CONTROLS ════════════════════════════════════════════════ */}
       <div style={{ width: 380, flexShrink: 0, display: "flex", flexDirection: "column", gap: "0" }}>
 
-        {/* ── Step 1: Upload ─────────────────────────────────────────────── */}
+        {/* ── Step 1: Input ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: "1.25rem" }}>
           <p style={{ margin: "0 0 0.6rem", fontSize: "0.62rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.09em" }}>STEP 1</p>
-          <div className="glass-card" style={{ padding: "1.1rem" }}>
-            <p style={{ margin: "0 0 0.75rem", fontWeight: 700, fontSize: "0.95rem" }}>Upload Your Video</p>
+          <div className="glass-card" style={{ padding: "1.25rem" }}>
 
+            {/* ── Primary: YouTube URL ── */}
+            <div style={{ marginBottom: "1.1rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.65rem" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171", flexShrink: 0 }} />
+                <span style={{ fontWeight: 800, fontSize: "1rem", letterSpacing: "-0.02em", color: "#f0ede8" }}>Paste a YouTube URL</span>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <input
+                  className="input-base"
+                  style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", flex: 1 }}
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={pipelineUrl}
+                  onChange={e => setPipelineUrl(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handlePipelineSubmit()}
+                />
+                <button
+                  className="btn-accent"
+                  style={{ padding: "0.75rem 1.1rem", fontSize: "0.85rem", flexShrink: 0, borderRadius: 10 }}
+                  onClick={handlePipelineSubmit}
+                  disabled={!pipelineUrl.trim() || submitting || isRunning}
+                >
+                  {submitting || isRunning ? "..." : "Go →"}
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.55rem", alignItems: "center" }}>
+                <span style={{ fontSize: "0.65rem", color: "#5a5755" }}>Clips:</span>
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} onClick={() => setPipelineClipCount(n)} style={{
+                    fontSize: "0.65rem", fontWeight: 700, padding: "0.2rem 0.5rem", borderRadius: 6, border: "none", cursor: "pointer", fontFamily: "inherit",
+                    background: pipelineClipCount === n ? "var(--accent)" : "rgba(255,255,255,0.06)",
+                    color: pipelineClipCount === n ? "#0a0806" : "#6e6a66",
+                    transition: "all 0.15s",
+                  }}>{n}</button>
+                ))}
+                <span style={{ fontSize: "0.65rem", color: "#5a5755", marginLeft: "0.25rem" }}>Length:</span>
+                {PIPELINE_LENGTHS.map(l => (
+                  <button key={l.value} onClick={() => setPipelineLength(l.value)} style={{
+                    fontSize: "0.65rem", fontWeight: 700, padding: "0.2rem 0.5rem", borderRadius: 6, border: "none", cursor: "pointer", fontFamily: "inherit",
+                    background: pipelineLength === l.value ? "var(--accent)" : "rgba(255,255,255,0.06)",
+                    color: pipelineLength === l.value ? "#0a0806" : "#6e6a66",
+                    transition: "all 0.15s",
+                  }}>{l.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Pipeline status */}
+            {isRunning && (
+              <div style={{ marginBottom: "0.85rem", padding: "0.75rem", borderRadius: 8, background: "rgba(201,169,110,0.05)", border: "1px solid var(--accent-border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
+                  <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
+                  <span style={{ fontSize: "0.75rem", color: "#c9a96e" }}>{job.stage}</span>
+                </div>
+                <div className="progress-bar" style={{ height: 3 }}>
+                  <div className="progress-fill" style={{ width: stageToPercent(job.stage) + "%" }} />
+                </div>
+              </div>
+            )}
+            {isFailed && <p style={{ margin: "0 0 0.85rem", fontSize: "0.72rem", color: "#f87171" }}>{job.error?.slice(0, 140)}</p>}
+            {isDone && job.clips?.length > 0 && (
+              <div style={{ marginBottom: "0.85rem", display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                <p style={{ margin: "0 0 0.3rem", fontSize: "0.65rem", color: "#6e6a66", fontWeight: 700, letterSpacing: "0.06em" }}>CLIPS READY — click to load</p>
+                {job.clips.map(clip => (
+                  <button key={clip.rank} onClick={() => loadClipIntoEditor(clip)}
+                    style={{ textAlign: "left", padding: "0.5rem 0.75rem", borderRadius: 8, border: "1px solid var(--border)", background: "rgba(255,255,255,0.03)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", fontSize: "0.75rem", transition: "all 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent-border)"; e.currentTarget.style.color = "var(--accent)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "#c0b8b0"; }}
+                  >#{clip.rank} — {clip.title} <span style={{ opacity: 0.4 }}>{clip.duration}s</span></button>
+                ))}
+              </div>
+            )}
+            {pipelineError && <p style={{ margin: "0 0 0.85rem", fontSize: "0.7rem", color: "#f87171" }}>{pipelineError.slice(0, 140)}</p>}
+
+            {/* Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: "0.25rem 0 1rem" }}>
+              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              <span style={{ fontSize: "0.65rem", color: "#3a3735", fontWeight: 600 }}>OR UPLOAD A FILE</span>
+              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+            </div>
+
+            {/* ── Secondary: File upload ── */}
             <input ref={fileInputRef} type="file" accept="video/*" style={{ display: "none" }}
               onChange={e => handleFile(e.target.files?.[0])} />
             <div
@@ -411,100 +491,18 @@ export default function ClipStudio() {
               onDragLeave={() => setDragOver(false)}
               onDrop={onDrop}
               style={{
-                border: `2px dashed ${dragOver ? "var(--accent)" : videoSrc ? "rgba(74,222,128,0.4)" : "rgba(255,255,255,0.1)"}`,
-                borderRadius: 10, padding: "1.75rem 1rem", textAlign: "center",
-                background: dragOver ? "var(--accent-dim)" : videoSrc ? "rgba(74,222,128,0.04)" : "rgba(255,255,255,0.02)",
+                border: `1.5px dashed ${dragOver ? "var(--accent)" : videoSrc ? "rgba(74,222,128,0.4)" : "rgba(255,255,255,0.08)"}`,
+                borderRadius: 10, padding: "1.1rem", textAlign: "center",
+                background: dragOver ? "var(--accent-dim)" : videoSrc ? "rgba(74,222,128,0.04)" : "transparent",
                 cursor: "pointer", transition: "all 0.15s",
               }}
             >
               {videoSrc ? (
-                <div>
-                  <p style={{ margin: 0, fontSize: "0.82rem", color: "#4ade80", fontWeight: 600 }}>✓ Video loaded</p>
-                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.68rem", color: "#5a5755" }}>Click to replace</p>
-                </div>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "#4ade80", fontWeight: 600 }}>✓ Video loaded — click to replace</p>
               ) : (
-                <div>
-                  <p style={{ margin: "0 0 0.25rem", fontSize: "1.4rem", opacity: 0.3 }}>↑</p>
-                  <p style={{ margin: "0 0 0.2rem", fontSize: "0.82rem", color: "#8a8480" }}>Click to upload or drag and drop</p>
-                  <p style={{ margin: 0, fontSize: "0.7rem", color: "#5a5755" }}>MP4 or WebM (MAX. 200mb)</p>
-                </div>
+                <p style={{ margin: 0, fontSize: "0.78rem", color: "#4e4b48" }}>↑ Click to upload or drag and drop · MP4, WebM (max 200MB)</p>
               )}
             </div>
-
-            {/* YouTube via pipeline */}
-            <details style={{ marginTop: "0.75rem" }}>
-              <summary style={{ fontSize: "0.72rem", color: "#6e6a66", cursor: "pointer", userSelect: "none" }}>
-                Or use YouTube URL (AI auto-clip) ▾
-              </summary>
-              <div style={{ marginTop: "0.6rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <input
-                  className="input-base"
-                  style={{ padding: "0.6rem 0.85rem", fontSize: "0.82rem" }}
-                  placeholder="Paste YouTube URL..."
-                  value={pipelineUrl}
-                  onChange={e => setPipelineUrl(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handlePipelineSubmit()}
-                />
-                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  <select
-                    className="input-base"
-                    style={{ padding: "0.5rem 0.7rem", fontSize: "0.75rem", width: "auto" }}
-                    value={pipelineClipCount}
-                    onChange={e => setPipelineClipCount(Number(e.target.value))}
-                  >
-                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} clip{n > 1 ? "s" : ""}</option>)}
-                  </select>
-                  <select
-                    className="input-base"
-                    style={{ padding: "0.5rem 0.7rem", fontSize: "0.75rem", width: "auto" }}
-                    value={pipelineLength}
-                    onChange={e => setPipelineLength(Number(e.target.value))}
-                  >
-                    {PIPELINE_LENGTHS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                  </select>
-                  <button
-                    className="btn-accent"
-                    style={{ padding: "0.55rem 1rem", fontSize: "0.78rem", flexShrink: 0 }}
-                    onClick={handlePipelineSubmit}
-                    disabled={!pipelineUrl.trim() || submitting || isRunning}
-                  >{submitting || isRunning ? "..." : "Go"}</button>
-                </div>
-                {isRunning && (
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
-                      <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
-                      <span style={{ fontSize: "0.72rem", color: "#a09888" }}>{job.stage}</span>
-                    </div>
-                    <div className="progress-bar" style={{ height: 3 }}>
-                      <div className="progress-fill" style={{ width: stageToPercent(job.stage) + "%" }} />
-                    </div>
-                  </div>
-                )}
-                {isFailed && <p style={{ margin: 0, fontSize: "0.72rem", color: "#f87171" }}>{job.error?.slice(0, 120)}</p>}
-                {isDone && job.clips?.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                    <p style={{ margin: 0, fontSize: "0.68rem", color: "#6e6a66" }}>Click a clip to load into editor:</p>
-                    {job.clips.map(clip => (
-                      <button
-                        key={clip.rank}
-                        onClick={() => loadClipIntoEditor(clip)}
-                        style={{
-                          textAlign: "left", padding: "0.5rem 0.7rem", borderRadius: 8,
-                          border: "1px solid var(--border)", background: "rgba(255,255,255,0.03)",
-                          color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", fontSize: "0.75rem",
-                          transition: "all 0.15s",
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent-border)"; e.currentTarget.style.color = "var(--accent)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "#c0b8b0"; }}
-                      >
-                        #{clip.rank} — {clip.title} <span style={{ opacity: 0.5 }}>{clip.duration}s</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {pipelineError && <p style={{ margin: 0, fontSize: "0.7rem", color: "#f87171" }}>{pipelineError.slice(0, 120)}</p>}
-              </div>
-            </details>
           </div>
         </div>
 
