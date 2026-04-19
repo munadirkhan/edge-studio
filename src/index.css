@@ -45,19 +45,18 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  /* inset top highlight + drop shadow for real depth */
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.055) inset,
-    0 4px 28px rgba(0,0,0,0.35),
-    0 1px 6px rgba(0,0,0,0.25);
-  transition: border-color var(--transition), box-shadow var(--transition);
+    0 1px 0 rgba(255,255,255,0.06) inset,
+    0 4px 32px rgba(0,0,0,0.4),
+    0 1px 6px rgba(0,0,0,0.3);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
 }
 .glass-card:hover {
   border-color: rgba(255,255,255,0.16);
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.07) inset,
-    0 6px 36px rgba(0,0,0,0.45),
-    0 2px 8px rgba(0,0,0,0.3);
+    0 1px 0 rgba(255,255,255,0.08) inset,
+    0 8px 40px rgba(0,0,0,0.5),
+    0 2px 10px rgba(0,0,0,0.35);
 }
 
 .btn-accent {
@@ -146,6 +145,17 @@ body {
 
 @keyframes fade-in { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
 .fade-in { animation: fade-in 0.22s ease forwards; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-18px) scale(1.03); }
+}
+
+@keyframes gradient-sweep {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
 /* ── Generating loader ──────────────────────────────── */
 @keyframes spin {

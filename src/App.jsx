@@ -74,6 +74,19 @@ export default function App() {
   useAuth();
   const [showTerms,   setShowTerms]   = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [mousePos, setMousePos]       = useState({ x: -1000, y: -1000 });
+  const [genCount, setGenCount]       = useState(18_432);
+
+  useEffect(() => {
+    const onMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setGenCount(n => n + Math.floor(Math.random() * 3 + 1)), 3800);
+    return () => clearInterval(t);
+  }, []);
 
   // Top-level mode — null = landing page
   const [mode, setMode] = useState(null); // null | "create" | "clip"
@@ -592,114 +605,195 @@ export default function App() {
 
         {/* ══ LANDING PAGE ══ */}
         {!mode && (
-          <div>
-            {/* Hero */}
-            <div style={{ minHeight: "88vh", display: "grid", placeItems: "center", padding: "4rem 2rem 3rem", position: "relative", overflow: "hidden" }}>
-              {/* Glow */}
-              <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ overflowX: "hidden" }}>
 
-              <div style={{ textAlign: "center", width: "100%", maxWidth: 900, position: "relative" }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(201,169,110,0.08)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "0.3rem 0.9rem", marginBottom: "1.75rem" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-                  <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.08em" }}>JARVIS AI ONLINE</span>
+            {/* Cursor spotlight */}
+            <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, background: `radial-gradient(500px at ${mousePos.x}px ${mousePos.y}px, rgba(201,169,110,0.055), transparent 70%)` }} />
+
+            {/* ── Hero ─────────────────────────────────────────────────── */}
+            <div style={{ minHeight: "94vh", display: "grid", placeItems: "center", padding: "6rem 2rem 4rem", position: "relative" }}>
+
+              {/* Dot grid */}
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)", backgroundSize: "26px 26px", pointerEvents: "none", maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)" }} />
+
+              {/* Orbs */}
+              <div style={{ position: "absolute", top: "5%", left: "10%", width: 560, height: 560, background: "radial-gradient(circle, rgba(201,169,110,0.08) 0%, transparent 65%)", borderRadius: "50%", pointerEvents: "none", animation: "float 8s ease-in-out infinite" }} />
+              <div style={{ position: "absolute", bottom: "15%", right: "5%", width: 440, height: 440, background: "radial-gradient(circle, rgba(120,100,255,0.05) 0%, transparent 65%)", borderRadius: "50%", pointerEvents: "none", animation: "float 10s ease-in-out infinite reverse" }} />
+
+              <div style={{ textAlign: "center", width: "100%", maxWidth: 860, position: "relative", zIndex: 1 }}>
+
+                {/* Live badge */}
+                <div className="fade-in" style={{ display: "inline-flex", alignItems: "center", gap: "0.55rem", background: "rgba(201,169,110,0.07)", border: "1px solid var(--accent-border)", borderRadius: 24, padding: "0.38rem 1.1rem", marginBottom: "2rem", backdropFilter: "blur(8px)" }}>
+                  <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", display: "inline-block", flexShrink: 0 }} />
+                  <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.07em" }}>
+                    {genCount.toLocaleString()} videos generated this week
+                  </span>
                 </div>
 
-                <h1 style={{ margin: "0 0 1.25rem", fontSize: "clamp(2.8rem, 7vw, 5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#f0ede8" }}>
-                  Create AI videos.<br />Clip anything into<br /><span style={accentStyle}>viral short-form content.</span>
+                {/* Headline */}
+                <h1 style={{ margin: "0 0 1.5rem", fontSize: "clamp(3rem, 8vw, 6.5rem)", fontWeight: 800, letterSpacing: "-0.055em", lineHeight: 0.92, color: "#f0ede8" }}>
+                  <span style={{ display: "block" }}>Create viral content</span>
+                  <span style={{ display: "block", background: "linear-gradient(135deg, #c9a96e 0%, #f0d898 45%, #c9a96e 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                    in seconds.
+                  </span>
                 </h1>
-                <p style={{ margin: "0 auto 3rem", fontSize: "1.05rem", color: "#9a9490", maxWidth: 560, lineHeight: 1.7 }}>
-                  Write a prompt and JARVIS generates a cinematic AI video with narration, music-ready visuals, and burned captions — or paste a YouTube link and it finds your best moments, clips to 9:16, and scores each one for viral potential.
+
+                <p style={{ margin: "0 auto 2.75rem", fontSize: "1.08rem", color: "#9a9490", maxWidth: 500, lineHeight: 1.7, letterSpacing: "-0.01em" }}>
+                  JARVIS AI turns any idea into a cinematic short — or clips your best moments from any YouTube video. TikTok-ready, Reels-ready, Shorts-ready.
                 </p>
 
-                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "1rem" }}>
-                  <button
-                    onClick={() => setMode("clip")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s", boxShadow: "0 0 30px rgba(201,169,110,0.25)" }}
-                    onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-                    onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
-                  >
-                    <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✂ Clip a Video</span>
-                    <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>YouTube URL → viral shorts</span>
-                  </button>
+                {/* CTAs */}
+                <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "2.5rem" }}>
                   <button
                     onClick={() => setMode("create")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "1rem 2.5rem", borderRadius: 14, border: "1px solid var(--border)", background: "rgba(255,255,255,0.04)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", transition: "all 0.18s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: 12, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: "0.95rem", transition: "all 0.18s", boxShadow: "0 0 0 1px rgba(201,169,110,0.3), 0 8px 32px rgba(201,169,110,0.22)", letterSpacing: "-0.01em" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 0 1px rgba(201,169,110,0.4), 0 12px 40px rgba(201,169,110,0.35)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 0 0 1px rgba(201,169,110,0.3), 0 8px 32px rgba(201,169,110,0.22)"; }}
                   >
-                    <span style={{ fontSize: "1.05rem", fontWeight: 800 }}>✦ Create a Clip</span>
-                    <span style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 2 }}>AI image + voice narration</span>
+                    <span style={{ fontSize: "1rem" }}>✦</span> Create with AI
+                  </button>
+                  <button
+                    onClick={() => setMode("clip")}
+                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: "0.95rem", transition: "all 0.18s", backdropFilter: "blur(8px)", letterSpacing: "-0.01em" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)"; e.currentTarget.style.color = "#f0ede8"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#c0b8b0"; e.currentTarget.style.transform = "none"; }}
+                  >
+                    <span style={{ fontSize: "1rem" }}>✂</span> Clip a Video
                   </button>
                 </div>
-                <p style={{ fontSize: "0.72rem", color: "#6e6a66" }}>No account needed to start — clips save when signed in</p>
+
+                {/* Platform pills */}
+                <div style={{ display: "flex", gap: "0.45rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "0.6rem" }}>
+                  {["TikTok", "Instagram Reels", "YouTube Shorts", "Twitter / X"].map(p => (
+                    <span key={p} style={{ fontSize: "0.68rem", fontWeight: 600, padding: "0.28rem 0.7rem", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6e6a66", letterSpacing: "0.02em" }}>{p}</span>
+                  ))}
+                </div>
+                <p style={{ margin: 0, fontSize: "0.7rem", color: "#4e4b48" }}>Free during beta · No credit card required</p>
               </div>
             </div>
 
-            {/* Features */}
-            <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem" }}>
+            {/* ── Stats strip ──────────────────────────────────────────── */}
+            <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "rgba(255,255,255,0.015)", backdropFilter: "blur(12px)" }}>
+              <div style={{ maxWidth: 1000, margin: "0 auto", padding: "1.75rem 2rem", display: "flex", justifyContent: "space-around", gap: "1rem", flexWrap: "wrap" }}>
+                {[
+                  { value: genCount.toLocaleString(), label: "Videos generated" },
+                  { value: "GPT-4o", label: "Intelligence" },
+                  { value: "DALL-E 3", label: "Image model" },
+                  { value: "Whisper", label: "Transcription" },
+                  { value: "9:16", label: "Always vertical" },
+                ].map(s => (
+                  <div key={s.label} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 800, letterSpacing: "-0.03em", background: "linear-gradient(135deg, #c9a96e, #f0d898)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{s.value}</div>
+                    <div style={{ fontSize: "0.65rem", color: "#5a5755", fontWeight: 500, marginTop: "0.15rem" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Features ─────────────────────────────────────────────── */}
+            <div style={{ padding: "6rem 1.5rem" }}>
               <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-                <p style={{ textAlign: "center", margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#7a7672" }}>WHAT IT DOES</p>
-                <h2 style={{ textAlign: "center", margin: "0 0 3.5rem", fontSize: "clamp(1.6rem, 4vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>
-                  Everything you need to go viral
+                <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+                  <p style={{ margin: "0 0 0.6rem", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: "var(--accent)" }}>CAPABILITIES</p>
+                  <h2 style={{ margin: 0, fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.04em", color: "#f0ede8", lineHeight: 1.1 }}>
+                    Everything you need to go viral
+                  </h2>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1px", background: "var(--border)", borderRadius: 20, overflow: "hidden", border: "1px solid var(--border)" }}>
+                  {[
+                    { icon: "✦", color: "#c9a96e", bg: "rgba(201,169,110,0.08)", title: "AI Video Creator", desc: "JARVIS generates a cinematic AI background, writes your voiceover script, and records it with a deep AI voice. One prompt, one click." },
+                    { icon: "✂", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", title: "YouTube → Shorts", desc: "Paste any YouTube URL. EdgeStudio downloads, transcribes, and finds your most engaging moments automatically." },
+                    { icon: "⚡", color: "#4ade80", bg: "rgba(74,222,128,0.08)", title: "Viral Score Engine", desc: "Every clip is scored 0-100 using GPT-4o — emotional hooks, surprise factor, shareability, and pacing all analyzed." },
+                    { icon: "T", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", title: "Synced Captions", desc: "Whisper AI transcribes with word-level precision. Captions animate in sync with speech — no editing required." },
+                    { icon: "◉", color: "#f472b6", bg: "rgba(244,114,182,0.08)", title: "6 AI Voices", desc: "Choose from Onyx, Nova, Echo, Fable, Shimmer, or Alloy. JARVIS writes the script and delivers it at the perfect pace." },
+                    { icon: "▯", color: "#fb923c", bg: "rgba(251,146,60,0.08)", title: "Caption Studio", desc: "Full caption editor with word highlighting, custom fonts, box effects, and real-time canvas preview before export." },
+                  ].map((f, i) => (
+                    <div
+                      key={f.title}
+                      style={{ padding: "2rem", background: "#060609", transition: "background 0.2s", cursor: "default" }}
+                      onMouseEnter={e => e.currentTarget.style.background = f.bg}
+                      onMouseLeave={e => e.currentTarget.style.background = "#060609"}
+                    >
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: f.bg, border: `1px solid ${f.color}22`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem", fontSize: "1.1rem", color: f.color, fontWeight: 800 }}>{f.icon}</div>
+                      <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", fontWeight: 700, color: "#f0ede8", letterSpacing: "-0.01em" }}>{f.title}</h3>
+                      <p style={{ margin: 0, fontSize: "0.82rem", color: "#6e6a66", lineHeight: 1.65 }}>{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── How it works ─────────────────────────────────────────── */}
+            <div style={{ padding: "2rem 1.5rem 6rem" }}>
+              <div style={{ maxWidth: 760, margin: "0 auto" }}>
+                <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+                  <p style={{ margin: "0 0 0.6rem", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: "var(--accent)" }}>WORKFLOW</p>
+                  <h2 style={{ margin: 0, fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.04em", color: "#f0ede8", lineHeight: 1.1 }}>
+                    Three steps to a short
+                  </h2>
+                </div>
+                {[
+                  { n: "01", title: "Input your content", desc: "Write a prompt and let JARVIS create from scratch — or paste any YouTube URL. Podcasts, interviews, vlogs, anything." },
+                  { n: "02", title: "AI does the work", desc: "GPT-4o reads the transcript, scores each moment, and picks the most viral-worthy clips. DALL-E 3 generates visuals. Whisper burns captions." },
+                  { n: "03", title: "Download and post", desc: "9:16 cropped, captioned, scored. Download your clips and upload directly to TikTok, Instagram Reels, or YouTube Shorts." },
+                ].map((s, i) => (
+                  <div key={s.n} style={{ display: "flex", gap: "2rem", padding: "2.25rem 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none", alignItems: "flex-start" }}>
+                    <div style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 14, background: "rgba(201,169,110,0.08)", border: "1px solid var(--accent-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--accent)", letterSpacing: "0.04em" }}>{s.n}</span>
+                    </div>
+                    <div>
+                      <h3 style={{ margin: "0 0 0.45rem", fontSize: "1.05rem", fontWeight: 700, color: "#f0ede8", letterSpacing: "-0.02em" }}>{s.title}</h3>
+                      <p style={{ margin: 0, fontSize: "0.875rem", color: "#7a7672", lineHeight: 1.65 }}>{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Powered by strip ─────────────────────────────────────── */}
+            <div style={{ borderTop: "1px solid var(--border)", padding: "2rem 1.5rem" }}>
+              <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", gap: "2.5rem", justifyContent: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.12em", color: "#3a3735" }}>POWERED BY</span>
+                {["GPT-4o", "DALL·E 3", "Whisper AI", "OpenAI TTS", "FFmpeg", "Supabase"].map(t => (
+                  <span key={t} style={{ fontSize: "0.8rem", fontWeight: 700, color: "#4e4b48", letterSpacing: "-0.01em" }}>{t}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Final CTA ────────────────────────────────────────────── */}
+            <div style={{ borderTop: "1px solid var(--border)", padding: "7rem 1.5rem", textAlign: "center", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(201,169,110,0.07) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <p style={{ margin: "0 0 0.6rem", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", color: "var(--accent)" }}>GET STARTED</p>
+                <h2 style={{ margin: "0 0 1rem", fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, letterSpacing: "-0.05em", color: "#f0ede8", lineHeight: 1.05 }}>
+                  Start creating now.
                 </h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem" }}>
-                  {[
-                    { icon: "✦", title: "AI Video Creator", desc: "Write a prompt — JARVIS generates a cinematic background with DALL-E 3, writes a full voiceover script, and records it with a deep AI voice. One click." },
-                    { icon: "✂", title: "YouTube → Shorts", desc: "Paste any YouTube URL. EdgeStudio downloads, transcribes, and finds your most engaging moments automatically." },
-                    { icon: "⚡", title: "Viral Score Engine", desc: "Every clip gets scored 0-100 based on emotional hooks, surprise factor, shareability, and engagement patterns from GPT-4o." },
-                    { icon: "💬", title: "Caption Burn", desc: "Whisper AI transcribes with timestamp precision. Captions are burned directly into the video — no editing needed." },
-                    { icon: "🎙", title: "6 AI Voices", desc: "Choose from Onyx, Fable, Echo, Nova, Shimmer, and Alloy. JARVIS writes the script and records it at the perfect pace." },
-                    { icon: "📱", title: "9:16 Ready", desc: "Every clip is auto-cropped to vertical format, ready to upload directly to TikTok, Instagram Reels, or YouTube Shorts." },
-                  ].map((f) => (
-                    <div key={f.title} className="glass-card" style={{ padding: "1.5rem" }}>
-                      <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{f.icon}</div>
-                      <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", fontWeight: 700, color: "#f0ede8" }}>{f.title}</h3>
-                      <p style={{ margin: 0, fontSize: "0.82rem", color: "#8a8480", lineHeight: 1.6 }}>{f.desc}</p>
-                    </div>
-                  ))}
+                <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#6e6a66" }}>Free during beta. No credit card. Takes 30 seconds.</p>
+                <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+                  <button
+                    onClick={() => setMode("create")}
+                    style={{ padding: "0.9rem 2.25rem", borderRadius: 12, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: "0.95rem", transition: "all 0.18s", boxShadow: "0 8px 32px rgba(201,169,110,0.25)", letterSpacing: "-0.01em" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(201,169,110,0.38)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(201,169,110,0.25)"; }}
+                  >
+                    ✦ Create with AI →
+                  </button>
+                  <button
+                    onClick={() => setMode("clip")}
+                    style={{ padding: "0.9rem 2.25rem", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: "#9a9490", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: "0.95rem", transition: "all 0.18s", letterSpacing: "-0.01em" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#f0ede8"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#9a9490"; }}
+                  >
+                    ✂ Clip a Video
+                  </button>
+                </div>
+                <div style={{ marginTop: "3rem", display: "flex", gap: "1.5rem", justifyContent: "center" }}>
+                  <button onClick={() => setShowTerms(true)} style={{ background: "none", border: "none", color: "#3a3735", fontSize: "0.7rem", cursor: "pointer", fontFamily: "inherit" }}>Terms of Service</button>
+                  <button onClick={() => setShowPrivacy(true)} style={{ background: "none", border: "none", color: "#3a3735", fontSize: "0.7rem", cursor: "pointer", fontFamily: "inherit" }}>Privacy Policy</button>
                 </div>
               </div>
             </div>
 
-            {/* How it works */}
-            <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem" }}>
-              <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
-                <p style={{ margin: "0 0 0.5rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", color: "#7a7672" }}>HOW IT WORKS</p>
-                <h2 style={{ margin: "0 0 3.5rem", fontSize: "clamp(1.6rem, 4vw, 2.5rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>Three steps to a short</h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0", position: "relative" }}>
-                  {[
-                    { step: "01", title: "Paste a YouTube link", desc: "Any video — podcast, interview, documentary, vlog. EdgeStudio downloads and transcribes it." },
-                    { step: "02", title: "JARVIS finds the moments", desc: "GPT-4o reads the transcript and picks the most engaging clips based on emotion, pacing, and shareability." },
-                    { step: "03", title: "Download and post", desc: "Your clips are cropped to 9:16, captioned, scored, and ready. Download and upload anywhere." },
-                  ].map((s, i) => (
-                    <div key={s.step} style={{ display: "flex", gap: "2rem", alignItems: "flex-start", textAlign: "left", padding: "2rem 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
-                      <span style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent)", opacity: 0.25, flexShrink: 0, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{s.step}</span>
-                      <div>
-                        <h3 style={{ margin: "0 0 0.4rem", fontSize: "1.05rem", fontWeight: 700, color: "#f0ede8" }}>{s.title}</h3>
-                        <p style={{ margin: 0, fontSize: "0.875rem", color: "#8a8480", lineHeight: 1.6 }}>{s.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Final CTA */}
-            <div style={{ borderTop: "1px solid var(--border)", padding: "5rem 1.5rem", textAlign: "center" }}>
-              <h2 style={{ margin: "0 0 1rem", fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#f0ede8" }}>Ready to clip?</h2>
-              <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#9a9490" }}>Free to use. No credit card. Start in seconds.</p>
-              <button
-                onClick={() => setMode("clip")}
-                className="btn-accent"
-                style={{ fontSize: "1rem", padding: "0.9rem 2.5rem", borderRadius: 12 }}
-              >
-                ✂ Start Clipping →
-              </button>
-              <div style={{ marginTop: "3rem", display: "flex", gap: "1.5rem", justifyContent: "center" }}>
-                <button onClick={() => setShowTerms(true)} style={{ background: "none", border: "none", color: "#6e6a66", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Terms of Service</button>
-                <button onClick={() => setShowPrivacy(true)} style={{ background: "none", border: "none", color: "#6e6a66", fontSize: "0.72rem", cursor: "pointer", fontFamily: "inherit" }}>Privacy Policy</button>
-              </div>
-            </div>
           </div>
         )}
 
