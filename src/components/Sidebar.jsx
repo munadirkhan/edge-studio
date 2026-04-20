@@ -16,13 +16,12 @@ export default function Sidebar({ mode, setMode, isMobile, isOpen, onClose }) {
   const [showAuth, setShowAuth]         = useState(false);
 
   function navigate(id) {
-    if (id === "home")     setMode(null);
-    else if (id === "projects") return;
+    if (id === "home") setMode(null);
     else setMode(id);
-    onClose?.(); // close drawer on mobile after nav
+    onClose?.();
   }
 
-  const active = mode === null ? "home" : mode === "create" ? "create" : mode === "clip" ? "clip" : null;
+  const active = mode === null ? "home" : mode;
 
   return (
     <>
@@ -76,19 +75,15 @@ export default function Sidebar({ mode, setMode, isMobile, isOpen, onClose }) {
                   padding: "0.6rem 0.85rem", borderRadius: 10, border: "none",
                   background: isActive ? "rgba(201,169,110,0.1)" : "transparent",
                   color: isActive ? "var(--accent)" : "#7a7672",
-                  cursor: item.id === "projects" ? "default" : "pointer",
+                  cursor: "pointer",
                   fontFamily: "inherit", fontSize: "0.875rem", fontWeight: isActive ? 600 : 400,
                   transition: "all 0.15s", textAlign: "left", width: "100%",
-                  opacity: item.id === "projects" ? 0.4 : 1,
                 }}
-                onMouseEnter={e => { if (item.id !== "projects" && !isActive) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
               >
                 <span style={{ fontSize: "0.85rem", width: 18, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
                 <span>{item.label}</span>
-                {item.id === "projects" && (
-                  <span style={{ marginLeft: "auto", fontSize: "0.55rem", background: "rgba(255,255,255,0.06)", borderRadius: 4, padding: "0.1rem 0.4rem", color: "#6e6a66" }}>SOON</span>
-                )}
               </button>
             );
           })}

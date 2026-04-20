@@ -3,6 +3,7 @@ import { TEMPLATES } from "./templates";
 import ClipStudio from "./ClipStudio";
 import { useAuth } from "./contexts/AuthContext";
 import Sidebar from "./components/Sidebar";
+import ProjectsPage from "./components/ProjectsPage";
 import { TermsModal, PrivacyModal } from "./components/TermsModal";
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ const VOICES = [
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  useAuth();
+  const { user, session } = useAuth();
   const [showTerms,   setShowTerms]   = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [mousePos, setMousePos]       = useState({ x: -1000, y: -1000 });
@@ -128,6 +129,10 @@ export default function App() {
   // Export
   const [exportStatus, setExportStatus]     = useState("");
   const [exportProgress, setExportProgress] = useState(0);
+
+  // Cloud save
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
 
   // Activity log
   const [activityLog, setActivityLog] = useState([]);
@@ -398,6 +403,54 @@ export default function App() {
     }
   }
 
+  // ─── Save to account ─────────────────────────────────────────────────────────
+
+  async function saveToAccount() {
+    if (!user || saving || !canvasRef.current) return;
+    setSaving(true);
+    try {
+      const token = session?.access_token;
+
+      // Capture canvas as JPEG (smaller than PNG, good enough for thumbnail)
+      const thumb = document.createElement("canvas");
+      const scale = 0.35;
+      thumb.width  = canvasRef.current.width  * scale;
+      thumb.height = canvasRef.current.height * scale;
+      thumb.getContext("2d").drawImage(canvasRef.current, 0, 0, thumb.width, thumb.height);
+      const imageBase64 = thumb.toDataURL("image/jpeg", 0.82);
+
+      // Convert voiceBuffer ArrayBuffer → base64
+      let audioBase64 = null;
+      if (voiceBuffer) {
+        const bytes = new Uint8Array(voiceBuffer);
+        let binary = "";
+        bytes.forEach(b => (binary += String.fromCharCode(b)));
+        audioBase64 = btoa(binary);
+      }
+
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          imageBase64, audioBase64,
+          hook, caption, hashtags,
+          message: userMessage,
+          templateId:       selectedTemplate?.id,
+          templateName:     selectedTemplate?.name,
+          duration:         clipDuration,
+          voice:            selectedVoice,
+          narrationScript,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+      setSaved(true);
+    } catch (err) {
+      alert("Save failed: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   // ─── Main generation flow ─────────────────────────────────────────────────────
 
   async function handleGenerate() {
@@ -413,6 +466,7 @@ export default function App() {
     setVoiceBuffer(null);
     setVoiceStatus("");
     setGenerateStatus("");
+    setSaved(false);
 
     try {
       const [imgData, capData] = await Promise.all([
@@ -806,6 +860,9 @@ export default function App() {
 
             {/* CLIP MODE */}
             {mode === "clip" && <ClipStudio />}
+
+            {/* PROJECTS MODE */}
+            {mode === "projects" && <ProjectsPage />}
 
             {/* STEP 1: Message */}
             {mode === "create" && step === 1 && (
@@ -1217,6 +1274,35 @@ export default function App() {
                         {voiceBuffer ? "↓ Video + Voice" : "↓ Video"}
                       </button>
                     </div>
+
+                    {/* Save to Account */}
+                    {user ? (
+                      <button
+                        onClick={saveToAccount}
+                        disabled={saving || saved}
+                        style={{
+                          width: "100%", padding: "0.75rem", fontSize: "0.85rem", fontWeight: 600,
+                          borderRadius: 10, border: `1px solid ${saved ? "rgba(74,222,128,0.35)" : "var(--accent-border)"}`,
+                          background: saved ? "rgba(74,222,128,0.08)" : "var(--accent-dim)",
+                          color: saved ? "#4ade80" : "var(--accent)",
+                          cursor: saving || saved ? "default" : "pointer",
+                          fontFamily: "inherit", transition: "all 0.2s",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                        }}
+                      >
+                        {saving ? (
+                          <><span style={{ display: "inline-block", width: 12, height: 12, borderRadius: "50%", border: "2px solid rgba(201,169,110,0.3)", borderTopColor: "var(--accent)", animation: "spin 0.8s linear infinite" }} /> Saving…</>
+                        ) : saved ? (
+                          <>✓ Saved to Account — view in Projects</>
+                        ) : (
+                          <>☁ Save to Account</>
+                        )}
+                      </button>
+                    ) : (
+                      <p style={{ margin: 0, fontSize: "0.72rem", color: "#5a5755", textAlign: "center" }}>
+                        Sign in to save projects to your account
+                      </p>
+                    )}
 
                     {/* Progress */}
                     {exportProgress > 0 && (

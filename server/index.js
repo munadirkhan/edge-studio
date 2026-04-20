@@ -325,6 +325,117 @@ app.get("/video/jobs", (_req, res) => {
   res.json(list);
 });
 
+// ── Projects API ─────────────────────────────────────────────────────────────
+
+async function getSupabaseUser(authHeader) {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !supabaseKey) throw new Error("Supabase not configured");
+  if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing auth token");
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const { data: { user }, error } = await supabase.auth.getUser(authHeader.slice(7));
+  if (error || !user) throw new Error("Invalid token");
+  return { supabase, user };
+}
+
+// POST /api/projects — save a generated project to the user's account
+app.post("/api/projects", express.json({ limit: "12mb" }), async (req, res) => {
+  try {
+    const { supabase, user } = await getSupabaseUser(req.headers.authorization);
+    const { imageBase64, audioBase64, hook, caption, hashtags, message, templateId, templateName, duration, voice, narrationScript } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: "imageBase64 required" });
+
+    const projectId = uuid();
+    const imgBuffer = Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ""), "base64");
+
+    // Upload thumbnail image to Supabase Storage
+    const { error: imgErr } = await supabase.storage
+      .from("project-assets")
+      .upload(`${user.id}/${projectId}/thumb.jpg`, imgBuffer, { contentType: "image/jpeg", upsert: true });
+    if (imgErr) return res.status(500).json({ error: "Image upload failed: " + imgErr.message });
+
+    const { data: { publicUrl: imageUrl } } = supabase.storage
+      .from("project-assets")
+      .getPublicUrl(`${user.id}/${projectId}/thumb.jpg`);
+
+    // Upload audio if provided
+    let audioUrl = null;
+    if (audioBase64) {
+      const audioBuf = Buffer.from(audioBase64, "base64");
+      await supabase.storage
+        .from("project-assets")
+        .upload(`${user.id}/${projectId}/audio.mp3`, audioBuf, { contentType: "audio/mpeg", upsert: true });
+      const { data: { publicUrl } } = supabase.storage
+        .from("project-assets")
+        .getPublicUrl(`${user.id}/${projectId}/audio.mp3`);
+      audioUrl = publicUrl;
+    }
+
+    // Insert project record
+    const { data, error: dbErr } = await supabase
+      .from("projects")
+      .insert({
+        id: projectId,
+        user_id: user.id,
+        hook: hook || "",
+        caption: caption || "",
+        hashtags: hashtags || "",
+        message: message || "",
+        template_id: templateId || "",
+        template_name: templateName || "",
+        duration: duration || 15,
+        voice: voice || "nova",
+        narration_script: narrationScript || "",
+        image_url: imageUrl,
+        audio_url: audioUrl,
+      })
+      .select()
+      .single();
+
+    if (dbErr) return res.status(500).json({ error: "DB error: " + dbErr.message });
+    res.json({ ok: true, project: data });
+  } catch (err) {
+    console.error("[projects/save]", err.message);
+    res.status(err.message.includes("token") || err.message.includes("auth") ? 401 : 500).json({ error: err.message });
+  }
+});
+
+// GET /api/projects — list current user's saved projects
+app.get("/api/projects", async (req, res) => {
+  try {
+    const { supabase, user } = await getSupabaseUser(req.headers.authorization);
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ projects: data });
+  } catch (err) {
+    res.status(err.message.includes("token") || err.message.includes("auth") ? 401 : 500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/projects/:id — delete a project and its assets
+app.delete("/api/projects/:id", async (req, res) => {
+  try {
+    const { supabase, user } = await getSupabaseUser(req.headers.authorization);
+    const { id } = req.params;
+    // Delete storage files
+    await supabase.storage.from("project-assets").remove([
+      `${user.id}/${id}/thumb.jpg`,
+      `${user.id}/${id}/audio.mp3`,
+    ]);
+    // Delete DB row (RLS also enforces user ownership)
+    const { error } = await supabase.from("projects").delete().eq("id", id).eq("user_id", user.id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(err.message.includes("token") || err.message.includes("auth") ? 401 : 500).json({ error: err.message });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function runPipeline(job, { url, clipCount, clipDuration, fontKey = "impact" }) {
