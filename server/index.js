@@ -22,7 +22,7 @@ const OUTPUTS_DIR = path.join(__dirname, "outputs");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "15mb" }));
 
 // Serve output clips for download
 app.use("/clips", express.static(OUTPUTS_DIR));
@@ -340,7 +340,7 @@ async function getSupabaseUser(authHeader) {
 }
 
 // POST /api/projects — save a generated project to the user's account
-app.post("/api/projects", express.json({ limit: "12mb" }), async (req, res) => {
+app.post("/api/projects", async (req, res) => {
   try {
     const { supabase, user } = await getSupabaseUser(req.headers.authorization);
     const { imageBase64, audioBase64, hook, caption, hashtags, message, templateId, templateName, duration, voice, narrationScript } = req.body;
