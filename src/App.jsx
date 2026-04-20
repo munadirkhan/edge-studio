@@ -6,6 +6,7 @@ import { supabase } from "./lib/supabase";
 import Sidebar from "./components/Sidebar";
 import ProjectsPage from "./components/ProjectsPage";
 import { TermsModal, PrivacyModal } from "./components/TermsModal";
+import { useToast } from "./components/Toast";
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -73,21 +74,16 @@ const VOICES = [
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
+  const toast = useToast();
   const [showTerms,   setShowTerms]   = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [mousePos, setMousePos]       = useState({ x: -1000, y: -1000 });
-  const [genCount, setGenCount]       = useState(18_432);
 
   useEffect(() => {
     const onMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => setGenCount(n => n + Math.floor(Math.random() * 3 + 1)), 3800);
-    return () => clearInterval(t);
   }, []);
 
   // Top-level mode — null = landing page
@@ -113,8 +109,6 @@ export default function App() {
   const [generating, setGenerating]         = useState(false);
   const [generateStatus, setGenerateStatus] = useState("");
   const [bgImageEl, setBgImageEl]           = useState(null);
-  const [, setRawGeneratedImage] = useState("");
-  const [, setImageDebug]         = useState("");
 
   // Generated content
   const [hook, setHook]         = useState("");
@@ -459,8 +453,9 @@ export default function App() {
       });
       if (dbErr) throw new Error(dbErr.message);
       setSaved(true);
+      toast.success("Project saved to your account.");
     } catch (err) {
-      alert("Save failed: " + err.message);
+      toast.error("Save failed: " + err.message);
     } finally {
       setSaving(false);
     }
@@ -473,8 +468,6 @@ export default function App() {
 
     setGenerating(true);
     setBgImageEl(null);
-    setRawGeneratedImage("");
-    setImageDebug("");
     setCaption("");
     setHook("");
     setHashtags("");
@@ -488,9 +481,6 @@ export default function App() {
         generateImage(selectedTemplate.id),
         generateCaption(),
       ]);
-
-      setRawGeneratedImage(imgData.image);
-      setImageDebug(imgData.source);
 
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -543,7 +533,7 @@ export default function App() {
     const mimeType = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((m) =>
       MediaRecorder.isTypeSupported(m)
     );
-    if (!mimeType) { alert("Video export requires Chrome or Edge."); return; }
+    if (!mimeType) { toast.error("Video export requires Chrome or Edge."); return; }
 
     setExportStatus("Preparing...");
     setExportProgress(0);
@@ -614,8 +604,6 @@ export default function App() {
     setJarvisIdea("");
     setSelectedTemplate(null);
     setBgImageEl(null);
-    setRawGeneratedImage("");
-    setImageDebug("");
     setCaption("");
     setHook("");
     setHashtags("");
@@ -695,7 +683,7 @@ export default function App() {
                 <div className="fade-in" style={{ display: "inline-flex", alignItems: "center", gap: "0.55rem", background: "rgba(201,169,110,0.07)", border: "1px solid var(--accent-border)", borderRadius: 24, padding: "0.38rem 1.1rem", marginBottom: "2rem", backdropFilter: "blur(8px)" }}>
                   <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", display: "inline-block", flexShrink: 0 }} />
                   <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.07em" }}>
-                    {genCount.toLocaleString()} videos generated this week
+                    10,000+ videos generated
                   </span>
                 </div>
 
@@ -713,20 +701,10 @@ export default function App() {
 
                 {/* CTAs */}
                 <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "2.5rem" }}>
-                  <button
-                    onClick={() => setMode("create")}
-                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: 12, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: "0.95rem", transition: "all 0.18s", boxShadow: "0 0 0 1px rgba(201,169,110,0.3), 0 8px 32px rgba(201,169,110,0.22)", letterSpacing: "-0.01em" }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 0 1px rgba(201,169,110,0.4), 0 12px 40px rgba(201,169,110,0.35)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 0 0 1px rgba(201,169,110,0.3), 0 8px 32px rgba(201,169,110,0.22)"; }}
-                  >
+                  <button className="cta-primary" onClick={() => setMode("create")}>
                     <span style={{ fontSize: "1rem" }}>✦</span> Create with AI
                   </button>
-                  <button
-                    onClick={() => setMode("clip")}
-                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: "0.95rem", transition: "all 0.18s", backdropFilter: "blur(8px)", letterSpacing: "-0.01em" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)"; e.currentTarget.style.color = "#f0ede8"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#c0b8b0"; e.currentTarget.style.transform = "none"; }}
-                  >
+                  <button className="cta-secondary" onClick={() => setMode("clip")}>
                     <span style={{ fontSize: "1rem" }}>✂</span> Clip a Video
                   </button>
                 </div>
@@ -745,7 +723,7 @@ export default function App() {
             <div style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "rgba(255,255,255,0.015)", backdropFilter: "blur(12px)" }}>
               <div style={{ maxWidth: 1000, margin: "0 auto", padding: "1.75rem 2rem", display: "flex", justifyContent: "space-around", gap: "1rem", flexWrap: "wrap" }}>
                 {[
-                  { value: genCount.toLocaleString(), label: "Videos generated" },
+                  { value: "10,000+", label: "Videos generated" },
                   { value: "GPT-4o", label: "Intelligence" },
                   { value: "DALL-E 3", label: "Image model" },
                   { value: "Whisper", label: "Transcription" },
@@ -779,9 +757,8 @@ export default function App() {
                   ].map((f, i) => (
                     <div
                       key={f.title}
-                      style={{ padding: "2rem", background: "#060609", transition: "background 0.2s", cursor: "default" }}
-                      onMouseEnter={e => e.currentTarget.style.background = f.bg}
-                      onMouseLeave={e => e.currentTarget.style.background = "#060609"}
+                      className="feature-card"
+                      style={{ "--card-hover-bg": f.bg }}
                     >
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: f.bg, border: `1px solid ${f.color}22`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem", fontSize: "1.1rem", color: f.color, fontWeight: 800 }}>{f.icon}</div>
                       <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", fontWeight: 700, color: "#f0ede8", letterSpacing: "-0.01em" }}>{f.title}</h3>
@@ -839,20 +816,10 @@ export default function App() {
                 </h2>
                 <p style={{ margin: "0 0 2.5rem", fontSize: "0.95rem", color: "#6e6a66" }}>Free during beta. No credit card. Takes 30 seconds.</p>
                 <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
-                  <button
-                    onClick={() => setMode("create")}
-                    style={{ padding: "0.9rem 2.25rem", borderRadius: 12, border: "none", background: "var(--accent)", color: "#0a0806", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: "0.95rem", transition: "all 0.18s", boxShadow: "0 8px 32px rgba(201,169,110,0.25)", letterSpacing: "-0.01em" }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(201,169,110,0.38)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(201,169,110,0.25)"; }}
-                  >
+                  <button className="cta-primary" onClick={() => setMode("create")}>
                     ✦ Create with AI →
                   </button>
-                  <button
-                    onClick={() => setMode("clip")}
-                    style={{ padding: "0.9rem 2.25rem", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: "#9a9490", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: "0.95rem", transition: "all 0.18s", letterSpacing: "-0.01em" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#f0ede8"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#9a9490"; }}
-                  >
+                  <button className="cta-secondary" onClick={() => setMode("clip")}>
                     ✂ Clip a Video
                   </button>
                 </div>
@@ -1097,10 +1064,10 @@ export default function App() {
                   <button
                     className="btn-accent"
                     style={{ flex: 2, padding: "0.85rem", fontSize: "0.875rem" }}
-                    onClick={() => selectedTemplate && setStep(3)}
+                    onClick={() => { if (!selectedTemplate) return; setStep(3); handleGenerate(); }}
                     disabled={!selectedTemplate}
                   >
-                    Generate →
+                    ✦ Generate Video →
                   </button>
                 </div>
               </div>
@@ -1110,24 +1077,7 @@ export default function App() {
             {mode === "create" && step === 3 && (
               <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <div className="glass-card" style={{ padding: "2rem" }}>
-                  {!generating ? (
-                    /* Pre-generate confirmation */
-                    <div style={{ textAlign: "center" }}>
-                      <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", margin: "0 0 1rem", letterSpacing: "0.12em", fontWeight: 700 }}>READY TO GENERATE</p>
-                      <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>{selectedTemplate?.preview}</div>
-                      <p style={{ fontSize: "1.35rem", fontWeight: 800, margin: "0 0 0.5rem", color: selectedTemplate?.accentColor || "var(--accent)", letterSpacing: "-0.02em" }}>
-                        {selectedTemplate?.name}
-                      </p>
-                      <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0" }}>
-                        {["AI Image", "Voice Narration", "Captions", `${clipDuration}s`].map((tag) => (
-                          <span key={tag} style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.04em", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 20, padding: "0.2rem 0.7rem", color: "#6e6a66" }}>{tag}</span>
-                        ))}
-                      </div>
-                      {generateStatus?.startsWith("Error") && (
-                        <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#f87171" }}>{generateStatus}</p>
-                      )}
-                    </div>
-                  ) : (
+                  {generating ? (
                     /* Animated generating state */
                     <div>
                       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
@@ -1188,19 +1138,32 @@ export default function App() {
                         })}
                       </div>
                     </div>
-                  )}
+                  ) : generateStatus?.startsWith("Error") ? (
+                    /* Error state with retry */
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>✕</div>
+                      <p style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", fontWeight: 600, color: "#f87171" }}>Generation failed</p>
+                      <p style={{ margin: "0 0 1.5rem", fontSize: "0.82rem", color: "var(--text-tertiary)", lineHeight: 1.55 }}>
+                        {generateStatus.replace("Error: ", "")}
+                      </p>
+                      <button
+                        className="btn-accent"
+                        style={{ padding: "0.75rem 2rem", fontSize: "0.875rem" }}
+                        onClick={handleGenerate}
+                      >
+                        ↻ Try again
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
-                <div style={{ display: "flex", gap: "0.75rem" }}>
-                  <button className="btn-ghost" style={{ flex: 1, padding: "0.9rem", fontSize: "0.875rem" }} onClick={() => !generating && setStep(2)} disabled={generating}>← Back</button>
-                  <button
-                    className="btn-accent"
-                    style={{ flex: 2, padding: "0.9rem", fontSize: "0.95rem", fontWeight: 700, letterSpacing: "-0.01em", boxShadow: !generating ? "0 4px 28px rgba(201,169,110,0.25)" : undefined }}
-                    onClick={handleGenerate}
-                    disabled={generating}
-                  >
-                    {generating ? "✦ Generating…" : "✦ Generate Video"}
-                  </button>
-                </div>
+                <button
+                  className="btn-ghost"
+                  style={{ padding: "0.9rem", fontSize: "0.875rem" }}
+                  onClick={() => !generating && setStep(2)}
+                  disabled={generating}
+                >
+                  ← Back to style picker
+                </button>
               </div>
             )}
 

@@ -4,10 +4,10 @@ import FeedbackModal from "./FeedbackModal";
 import AuthModal from "./AuthModal";
 
 const NAV = [
-  { id: "home",    icon: "⌂", label: "Home"     },
-  { id: "clip",    icon: "✂", label: "Clip"     },
-  { id: "create",  icon: "✦", label: "Create"   },
-  { id: "projects",icon: "▦", label: "Projects" },
+  { id: "home",     icon: "⌂", label: "Home"     },
+  { id: "clip",     icon: "✂", label: "Clip"     },
+  { id: "create",   icon: "✦", label: "Create"   },
+  { id: "projects", icon: "▦", label: "Projects" },
 ];
 
 export default function Sidebar({ mode, setMode, isMobile, isOpen, onClose }) {
@@ -25,10 +25,10 @@ export default function Sidebar({ mode, setMode, isMobile, isOpen, onClose }) {
 
   return (
     <>
-      {/* Scrim — mobile only, shown when drawer is open */}
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
 
       <aside
+        className={`app-sidebar${isOpen ? " sidebar-open" : ""}`}
         style={{
           width: 220, flexShrink: 0,
           height: isMobile ? "100dvh" : "100vh",
@@ -63,24 +63,14 @@ export default function Sidebar({ mode, setMode, isMobile, isOpen, onClose }) {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: "0.75rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.2rem", overflowY: "auto" }}>
+        <nav style={{ flex: 1, padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.2rem", overflowY: "auto" }}>
           {NAV.map((item) => {
             const isActive = active === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => navigate(item.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: "0.7rem",
-                  padding: "0.6rem 0.85rem", borderRadius: 10, border: "none",
-                  background: isActive ? "rgba(201,169,110,0.1)" : "transparent",
-                  color: isActive ? "var(--accent)" : "#7a7672",
-                  cursor: "pointer",
-                  fontFamily: "inherit", fontSize: "0.875rem", fontWeight: isActive ? 600 : 400,
-                  transition: "all 0.15s", textAlign: "left", width: "100%",
-                }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                className={`nav-btn${isActive ? " nav-btn-active" : ""}`}
               >
                 <span style={{ fontSize: "0.85rem", width: 18, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
                 <span>{item.label}</span>
@@ -92,16 +82,8 @@ export default function Sidebar({ mode, setMode, isMobile, isOpen, onClose }) {
         {/* Bottom */}
         <div style={{ padding: "0.75rem", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
           <button
+            className="nav-btn"
             onClick={() => { setShowFeedback(true); onClose?.(); }}
-            style={{
-              display: "flex", alignItems: "center", gap: "0.7rem",
-              padding: "0.6rem 0.85rem", borderRadius: 10, border: "none",
-              background: "transparent", color: "#7a7672",
-              cursor: "pointer", fontFamily: "inherit", fontSize: "0.875rem",
-              transition: "all 0.15s", textAlign: "left", width: "100%",
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
-            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
             <span style={{ fontSize: "0.85rem", width: 18, textAlign: "center" }}>◎</span>
             <span>Submit Feedback</span>

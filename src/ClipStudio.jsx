@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useToast } from "./components/Toast";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -106,6 +107,7 @@ function SliderRow({ label, value, min = 0, max = 100, onChange, unit = "%" }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function ClipStudio() {
+  const toast = useToast();
 
   // ── Video state ──────────────────────────────────────────────────────────
   const [videoSrc, setVideoSrc]         = useState(null);
@@ -363,7 +365,7 @@ export default function ClipStudio() {
     if (!canvas || !video || exporting) return;
 
     const mimeType = ["video/webm;codecs=vp9", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
-    if (!mimeType) { alert("Video export requires Chrome or Edge."); return; }
+    if (!mimeType) { toast.error("Video export requires Chrome or Edge."); return; }
 
     setExporting(true); setExportProgress(0);
 

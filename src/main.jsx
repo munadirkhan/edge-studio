@@ -4,12 +4,15 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import ExportQueue from './components/ExportQueue.jsx'
+import { ToastProvider } from './components/Toast.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <App />
-      <ExportQueue />
+      <ToastProvider>
+        <App />
+        <ExportQueue />
+      </ToastProvider>
     </AuthProvider>
   </StrictMode>,
 )
