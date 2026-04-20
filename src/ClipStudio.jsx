@@ -105,6 +105,62 @@ function SliderRow({ label, value, min = 0, max = 100, onChange, unit = "%" }) {
   );
 }
 
+// ── Job card sub-component ────────────────────────────────────────────────────
+function JobCard({ entry, onLoadClip }) {
+  const { url, job } = entry;
+  const isRunning = job?.status === "queued" || job?.status === "running";
+  const isDone    = job?.status === "done";
+  const isFailed  = job?.status === "failed";
+
+  // Shorten URL for display
+  let displayUrl = url;
+  try {
+    const u = new URL(url);
+    const v = u.searchParams.get("v");
+    displayUrl = v ? `youtube.com/watch?v=${v}` : u.hostname + u.pathname.slice(0, 24);
+  } catch {}
+
+  return (
+    <div style={{ borderRadius: 10, border: `1px solid ${isDone ? "rgba(74,222,128,0.25)" : isFailed ? "rgba(248,113,113,0.2)" : "var(--border)"}`, background: isDone ? "rgba(74,222,128,0.03)" : isFailed ? "rgba(248,113,113,0.03)" : "rgba(255,255,255,0.02)", padding: "0.65rem 0.85rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: isRunning || isDone || isFailed ? "0.45rem" : 0 }}>
+        <span style={{ fontSize: "0.65rem", color: "#5a5755", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{displayUrl}</span>
+        <span style={{
+          fontSize: "0.58rem", fontWeight: 700, padding: "0.15rem 0.45rem", borderRadius: 5, flexShrink: 0,
+          background: isDone ? "rgba(74,222,128,0.12)" : isFailed ? "rgba(248,113,113,0.1)" : "rgba(201,169,110,0.1)",
+          color: isDone ? "#4ade80" : isFailed ? "#f87171" : "#c9a96e",
+          border: `1px solid ${isDone ? "rgba(74,222,128,0.2)" : isFailed ? "rgba(248,113,113,0.18)" : "var(--accent-border)"}`,
+        }}>
+          {isDone ? `✓ ${job.clips?.length || 0} clips` : isFailed ? "✗ Failed" : job?.stage || "Starting…"}
+        </span>
+      </div>
+
+      {isRunning && (
+        <div className="progress-bar" style={{ height: 2, marginBottom: "0.35rem" }}>
+          <div className="progress-fill" style={{ width: stageToPercent(job.stage) + "%" }} />
+        </div>
+      )}
+
+      {isFailed && (
+        <p style={{ margin: 0, fontSize: "0.68rem", color: "#f87171" }}>{job.error?.slice(0, 100)}</p>
+      )}
+
+      {isDone && job.clips?.length > 0 && (
+        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+          {job.clips.map(clip => (
+            <button key={clip.rank} onClick={() => onLoadClip(clip)}
+              style={{ padding: "0.3rem 0.65rem", borderRadius: 6, border: "1px solid var(--border)", background: "rgba(255,255,255,0.03)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", fontSize: "0.68rem", transition: "all 0.15s", whiteSpace: "nowrap" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent-border)"; e.currentTarget.style.color = "var(--accent)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "#c0b8b0"; }}
+            >
+              #{clip.rank} {clip.title?.slice(0, 22) || `Clip ${clip.rank}`} <span style={{ opacity: 0.45 }}>{clip.duration}s</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function ClipStudio() {
   const toast = useToast();
@@ -116,16 +172,13 @@ export default function ClipStudio() {
   const fileInputRef                    = useRef(null);
 
   // ── Pipeline state ───────────────────────────────────────────────────────
-  const [pipelineUrl, setPipelineUrl]   = useState("");
+  const [urlsText, setUrlsText]         = useState("");
   const [pipelineClipCount, setPipelineClipCount] = useState(3);
   const [pipelineLength, setPipelineLength] = useState(60);
-  const [jobId, setJobId]               = useState(null);
-  const [job, setJob]                   = useState(null);
+  const [batchJobs, setBatchJobs]       = useState([]);
   const [pipelineError, setPipelineError] = useState("");
   const [submitting, setSubmitting]     = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const uploadFileRef                   = useRef(null);
-  const pollRef                         = useRef(null);
 
   // ── Editor state ─────────────────────────────────────────────────────────
   const [title, setTitle]               = useState("");
@@ -165,21 +218,22 @@ export default function ClipStudio() {
 
   const ar = ASPECT_RATIOS.find(r => r.id === aspectRatio) || ASPECT_RATIOS[0];
 
-  // ── Poll pipeline job ─────────────────────────────────────────────────────
+  // ── Poll all active batch jobs (self-sustaining loop) ────────────────────
   useEffect(() => {
-    if (!jobId) return;
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`/video/status/${jobId}`);
-        if (!res.ok) return;
-        const data = await res.json().catch(() => null);
-        if (!data) return;
-        setJob(data);
-        if (data.status === "done" || data.status === "failed") clearInterval(pollRef.current);
-      } catch {}
+    const active = batchJobs.filter(j => j.jobId && (j.job?.status === "queued" || j.job?.status === "running"));
+    if (!active.length) return;
+    const timer = setTimeout(async () => {
+      for (const entry of active) {
+        try {
+          const res = await fetch(`/video/status/${entry.jobId}`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          setBatchJobs(prev => prev.map(j => j.id === entry.id ? { ...j, job: data } : j));
+        } catch {}
+      }
     }, 2500);
-    return () => clearInterval(pollRef.current);
-  }, [jobId]);
+    return () => clearTimeout(timer);
+  }, [batchJobs]);
 
   // ── Canvas draw loop ──────────────────────────────────────────────────────
   const drawFrame = useCallback(() => {
@@ -332,30 +386,49 @@ export default function ClipStudio() {
     handleFile(e.dataTransfer?.files?.[0]);
   }
 
+  // ── Parsed URLs from textarea ─────────────────────────────────────────────
+  const parsedUrls = urlsText.trim().split(/\n+/).map(u => u.trim()).filter(Boolean);
+  const hasRunning  = batchJobs.some(j => j.job?.status === "queued" || j.job?.status === "running");
+
   // ── Load clip from pipeline results into editor ───────────────────────────
   function loadClipIntoEditor(clip) {
-    if (videoSrc) URL.revokeObjectURL(videoSrc);
     setVideoSrc(clip.downloadUrl);
     setTitle(clip.title || "");
     setSubtitle(clip.caption?.split("\n")?.[0] || "");
   }
 
-  // ── Pipeline submit ───────────────────────────────────────────────────────
+  // ── Pipeline submit (bulk) ────────────────────────────────────────────────
   async function handlePipelineSubmit() {
-    if (submitting || !pipelineUrl.trim()) return;
-    setSubmitting(true); setPipelineError(""); setJob(null); setJobId(null);
-    try {
-      const res  = await fetch("/video/process", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: pipelineUrl.trim(), clipCount: pipelineClipCount, clipDuration: pipelineLength }),
-      });
-      const data = await res.json().catch(() => { throw new Error("Backend unavailable"); });
-      if (!res.ok || data.error) throw new Error(data.error || "Failed to start");
-      setJobId(data.jobId);
-      setJob({ status: "queued", stage: "Starting...", clips: [] });
-    } catch (err) { setPipelineError(err.message); }
-    finally { setSubmitting(false); }
+    if (submitting || hasRunning || !parsedUrls.length) return;
+    setSubmitting(true); setPipelineError("");
+
+    // Create placeholder entries immediately so UI shows them
+    const entries = parsedUrls.map(url => ({
+      id: Math.random().toString(36).slice(2),
+      url,
+      jobId: null,
+      job: { status: "queued", stage: "Starting…", clips: [] },
+    }));
+    setBatchJobs(entries);
+
+    // Fire all jobs in parallel
+    await Promise.all(entries.map(async (entry) => {
+      try {
+        const res  = await fetch("/video/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: entry.url, clipCount: pipelineClipCount, clipDuration: pipelineLength }),
+        });
+        const data = await res.json().catch(() => { throw new Error("Backend unavailable"); });
+        if (!res.ok || data.error) throw new Error(data.error || "Failed to start");
+        setBatchJobs(prev => prev.map(j => j.id === entry.id ? { ...j, jobId: data.jobId } : j));
+      } catch (err) {
+        setBatchJobs(prev => prev.map(j => j.id === entry.id ? { ...j, job: { status: "failed", error: err.message, clips: [] } } : j));
+        if (entries.length === 1) setPipelineError(err.message);
+      }
+    }));
+
+    setSubmitting(false);
   }
 
   // ── Export ────────────────────────────────────────────────────────────────
@@ -408,9 +481,8 @@ export default function ClipStudio() {
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const isRunning = job && (job.status === "queued" || job.status === "running");
-  const isDone    = job?.status === "done";
-  const isFailed  = job?.status === "failed";
+  const allDone    = batchJobs.length > 0 && batchJobs.every(j => j.job?.status === "done" || j.job?.status === "failed");
+  const allClips   = batchJobs.flatMap(j => j.job?.clips || []);
 
   // Preview dimensions (scale canvas to fit column)
   const previewH    = isMobile ? (aspectRatio === "9:16" ? 300 : 180) : (aspectRatio === "9:16" ? 500 : 280);
@@ -427,32 +499,36 @@ export default function ClipStudio() {
           <p style={{ margin: "0 0 0.6rem", fontSize: "0.62rem", fontWeight: 700, color: "#6e6a66", letterSpacing: "0.09em" }}>STEP 1</p>
           <div className="glass-card" style={{ padding: "1.25rem" }}>
 
-            {/* ── Primary: YouTube URL ── */}
+            {/* ── Primary: YouTube URLs ── */}
             <div style={{ marginBottom: "1.1rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.65rem" }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171", flexShrink: 0 }} />
-                <span style={{ fontWeight: 800, fontSize: "1rem", letterSpacing: "-0.02em", color: "#f0ede8" }}>Paste a YouTube URL</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.65rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171", flexShrink: 0 }} />
+                  <span style={{ fontWeight: 800, fontSize: "1rem", letterSpacing: "-0.02em", color: "#f0ede8" }}>Paste YouTube URLs</span>
+                </div>
+                {parsedUrls.length > 1 && (
+                  <span style={{ fontSize: "0.62rem", fontWeight: 700, padding: "0.15rem 0.5rem", borderRadius: 5, background: "var(--accent-dim)", border: "1px solid var(--accent-border)", color: "var(--accent)" }}>
+                    {parsedUrls.length} URLs
+                  </span>
+                )}
               </div>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <input
-                  className="input-base"
-                  style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", flex: 1 }}
-                  placeholder="https://youtube.com/watch?v=..."
-                  value={pipelineUrl}
-                  onChange={e => setPipelineUrl(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handlePipelineSubmit()}
-                />
-                <button
-                  className="btn-accent"
-                  style={{ padding: "0.75rem 1.1rem", fontSize: "0.85rem", flexShrink: 0, borderRadius: 10 }}
-                  onClick={handlePipelineSubmit}
-                  disabled={!pipelineUrl.trim() || submitting || isRunning}
-                >
-                  {submitting || isRunning ? "..." : "Go →"}
-                </button>
-              </div>
-              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.55rem", alignItems: "center" }}>
-                <span style={{ fontSize: "0.65rem", color: "#5a5755" }}>Clips:</span>
+              <textarea
+                className="input-base"
+                style={{ padding: "0.75rem 1rem", fontSize: "0.82rem", resize: "none", minHeight: parsedUrls.length > 1 ? 90 : 44, marginBottom: "0.55rem", lineHeight: 1.5, transition: "min-height 0.2s" }}
+                placeholder={"https://youtube.com/watch?v=...\nhttps://youtube.com/watch?v=... (one per line)"}
+                value={urlsText}
+                onChange={e => setUrlsText(e.target.value)}
+              />
+              <button
+                className="btn-accent"
+                style={{ width: "100%", padding: "0.75rem", fontSize: "0.9rem", borderRadius: 10, fontWeight: 700 }}
+                onClick={handlePipelineSubmit}
+                disabled={!parsedUrls.length || submitting || hasRunning}
+              >
+                {submitting ? "Starting…" : hasRunning ? "Processing…" : parsedUrls.length > 1 ? `Process ${parsedUrls.length} Videos →` : "Process Video →"}
+              </button>
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.55rem", alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.65rem", color: "#5a5755" }}>Clips per video:</span>
                 {[1,2,3,4,5].map(n => (
                   <button key={n} onClick={() => setPipelineClipCount(n)} style={{
                     fontSize: "0.65rem", fontWeight: 700, padding: "0.2rem 0.5rem", borderRadius: 6, border: "none", cursor: "pointer", fontFamily: "inherit",
@@ -473,31 +549,25 @@ export default function ClipStudio() {
               </div>
             </div>
 
-            {/* Pipeline status */}
-            {isRunning && (
-              <div style={{ marginBottom: "0.85rem", padding: "0.75rem", borderRadius: 8, background: "rgba(201,169,110,0.05)", border: "1px solid var(--accent-border)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
-                  <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
-                  <span style={{ fontSize: "0.75rem", color: "#c9a96e" }}>{job.stage}</span>
-                </div>
-                <div className="progress-bar" style={{ height: 3 }}>
-                  <div className="progress-fill" style={{ width: stageToPercent(job.stage) + "%" }} />
-                </div>
-              </div>
-            )}
-            {isFailed && <p style={{ margin: "0 0 0.85rem", fontSize: "0.72rem", color: "#f87171" }}>{job.error?.slice(0, 140)}</p>}
-            {isDone && job.clips?.length > 0 && (
-              <div style={{ marginBottom: "0.85rem", display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <p style={{ margin: "0 0 0.3rem", fontSize: "0.65rem", color: "#6e6a66", fontWeight: 700, letterSpacing: "0.06em" }}>CLIPS READY — click to load</p>
-                {job.clips.map(clip => (
-                  <button key={clip.rank} onClick={() => loadClipIntoEditor(clip)}
-                    style={{ textAlign: "left", padding: "0.5rem 0.75rem", borderRadius: 8, border: "1px solid var(--border)", background: "rgba(255,255,255,0.03)", color: "#c0b8b0", cursor: "pointer", fontFamily: "inherit", fontSize: "0.75rem", transition: "all 0.15s" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent-border)"; e.currentTarget.style.color = "var(--accent)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "#c0b8b0"; }}
-                  >#{clip.rank} — {clip.title} <span style={{ opacity: 0.4 }}>{clip.duration}s</span></button>
+            {/* Per-job progress cards */}
+            {batchJobs.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.85rem" }}>
+                {batchJobs.length > 1 && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.15rem" }}>
+                    <span style={{ fontSize: "0.65rem", color: "#6e6a66", fontWeight: 700, letterSpacing: "0.06em" }}>
+                      {hasRunning ? "PROCESSING QUEUE" : allDone ? `DONE — ${allClips.length} CLIPS TOTAL` : "QUEUE"}
+                    </span>
+                    {!hasRunning && (
+                      <button onClick={() => { setBatchJobs([]); setUrlsText(""); }} style={{ fontSize: "0.62rem", color: "#5a5755", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Clear</button>
+                    )}
+                  </div>
+                )}
+                {batchJobs.map(entry => (
+                  <JobCard key={entry.id} entry={entry} onLoadClip={loadClipIntoEditor} />
                 ))}
               </div>
             )}
+
             {pipelineError && <p style={{ margin: "0 0 0.85rem", fontSize: "0.7rem", color: "#f87171" }}>{pipelineError.slice(0, 140)}</p>}
 
             {/* Divider */}
@@ -809,16 +879,16 @@ export default function ClipStudio() {
             )}
           </div>
 
-          {/* Clips from pipeline */}
-          {isDone && job.clips?.length > 0 && (
+          {/* All clips from batch jobs */}
+          {allClips.length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               <p style={{ margin: "0 0 0.5rem", fontSize: "0.68rem", color: "#6e6a66", fontWeight: 600, letterSpacing: "0.06em" }}>
-                AI CLIPS — click to load
+                {allClips.length} AI CLIPS — click to load into editor
               </p>
               <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.25rem" }}>
-                {job.clips.map(clip => (
+                {allClips.map((clip, i) => (
                   <button
-                    key={clip.rank}
+                    key={i}
                     onClick={() => loadClipIntoEditor(clip)}
                     style={{
                       flexShrink: 0, padding: "0.5rem 0.85rem", borderRadius: 8,
@@ -829,7 +899,7 @@ export default function ClipStudio() {
                     onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent-border)"; e.currentTarget.style.color = "var(--accent)"; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "#c0b8b0"; }}
                   >
-                    #{clip.rank} {clip.duration}s
+                    #{clip.rank} {clip.title?.slice(0, 18) || `Clip ${clip.rank}`} <span style={{ opacity: 0.45 }}>{clip.duration}s</span>
                   </button>
                 ))}
               </div>
