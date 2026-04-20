@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { TEMPLATES } from "./templates";
 import ClipStudio from "./ClipStudio";
 import { useAuth } from "./contexts/AuthContext";
+import { supabase } from "./lib/supabase";
 import Sidebar from "./components/Sidebar";
 import ProjectsPage from "./components/ProjectsPage";
 import { TermsModal, PrivacyModal } from "./components/TermsModal";
@@ -409,40 +410,54 @@ export default function App() {
     if (!user || saving || !canvasRef.current) return;
     setSaving(true);
     try {
-      const token = session?.access_token;
+      const projectId = crypto.randomUUID();
 
-      // Capture canvas as JPEG (smaller than PNG, good enough for thumbnail)
+      // Capture a 35%-scale JPEG thumbnail from the current canvas frame
       const thumb = document.createElement("canvas");
-      const scale = 0.35;
-      thumb.width  = canvasRef.current.width  * scale;
-      thumb.height = canvasRef.current.height * scale;
+      thumb.width  = Math.round(canvasRef.current.width  * 0.35);
+      thumb.height = Math.round(canvasRef.current.height * 0.35);
       thumb.getContext("2d").drawImage(canvasRef.current, 0, 0, thumb.width, thumb.height);
-      const imageBase64 = thumb.toDataURL("image/jpeg", 0.82);
+      const imageBlob = await new Promise(res => thumb.toBlob(res, "image/jpeg", 0.82));
 
-      // Convert voiceBuffer ArrayBuffer → base64
-      let audioBase64 = null;
+      // Upload thumbnail to Supabase Storage
+      const imgPath = `${user.id}/${projectId}/thumb.jpg`;
+      const { error: imgErr } = await supabase.storage
+        .from("project-assets")
+        .upload(imgPath, imageBlob, { contentType: "image/jpeg", upsert: true });
+      if (imgErr) throw new Error("Image upload failed: " + imgErr.message);
+      const { data: { publicUrl: imageUrl } } = supabase.storage
+        .from("project-assets").getPublicUrl(imgPath);
+
+      // Upload audio if available
+      let audioUrl = null;
       if (voiceBuffer) {
-        const bytes = new Uint8Array(voiceBuffer);
-        let binary = "";
-        bytes.forEach(b => (binary += String.fromCharCode(b)));
-        audioBase64 = btoa(binary);
+        const audioPath = `${user.id}/${projectId}/audio.mp3`;
+        const audioBlob = new Blob([voiceBuffer], { type: "audio/mpeg" });
+        await supabase.storage
+          .from("project-assets")
+          .upload(audioPath, audioBlob, { contentType: "audio/mpeg", upsert: true });
+        const { data: { publicUrl } } = supabase.storage
+          .from("project-assets").getPublicUrl(audioPath);
+        audioUrl = publicUrl;
       }
 
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          imageBase64, audioBase64,
-          hook, caption, hashtags,
-          message: userMessage,
-          templateId:       selectedTemplate?.id,
-          templateName:     selectedTemplate?.name,
-          duration:         clipDuration,
-          voice:            selectedVoice,
-          narrationScript,
-        }),
+      // Insert project row
+      const { error: dbErr } = await supabase.from("projects").insert({
+        id:              projectId,
+        user_id:         user.id,
+        hook:            hook || "",
+        caption:         caption || "",
+        hashtags:        hashtags || "",
+        message:         userMessage || "",
+        template_id:     selectedTemplate?.id   || "",
+        template_name:   selectedTemplate?.name || "",
+        duration:        clipDuration,
+        voice:           selectedVoice,
+        narration_script: narrationScript || "",
+        image_url:       imageUrl,
+        audio_url:       audioUrl,
       });
-      if (!res.ok) throw new Error((await res.json()).error || "Save failed");
+      if (dbErr) throw new Error(dbErr.message);
       setSaved(true);
     } catch (err) {
       alert("Save failed: " + err.message);

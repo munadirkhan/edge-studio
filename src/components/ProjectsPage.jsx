@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 
+
 export default function ProjectsPage() {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const [projects, setProjects]   = useState([]);
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState("");
@@ -17,13 +18,13 @@ export default function ProjectsPage() {
   async function fetchProjects() {
     setLoading(true); setError("");
     try {
-      const token = session?.access_token;
-      const res = await fetch("/api/projects", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error((await res.json()).error || "Failed to load");
-      const { projects } = await res.json();
-      setProjects(projects || []);
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      setProjects(data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,11 +36,15 @@ export default function ProjectsPage() {
     if (!confirm("Delete this project?")) return;
     setDeleting(id);
     try {
-      const token = session?.access_token;
-      await fetch(`/api/projects/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Delete storage files
+      const project = projects.find(p => p.id === id);
+      if (project) {
+        await supabase.storage.from("project-assets").remove([
+          `${user.id}/${id}/thumb.jpg`,
+          `${user.id}/${id}/audio.mp3`,
+        ]);
+      }
+      await supabase.from("projects").delete().eq("id", id).eq("user_id", user.id);
       setProjects(p => p.filter(p => p.id !== id));
     } finally {
       setDeleting(null);
