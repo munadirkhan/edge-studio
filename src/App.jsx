@@ -799,7 +799,7 @@ export default function App() {
 
         {/* ══ APP ══ */}
         {mode && (
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem", display: "grid", gridTemplateColumns: "1fr 280px", gap: "1.5rem" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "1rem" : "2rem 1.5rem", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 280px", gap: "1.5rem" }}>
 
           {/* ── Content area ── */}
           <div style={{ minWidth: 0 }}>
@@ -886,7 +886,7 @@ export default function App() {
                     }}>2</span>
                     <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Video Duration</span>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem" }}>
+                  <div className="duration-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem" }}>
                     {DURATIONS.map((d) => {
                       const isActive = clipDuration === d.value;
                       return (
@@ -947,7 +947,7 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.65rem" }}>
+                  <div className="template-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.65rem" }}>
                     {TEMPLATES.map((t) => {
                       const isSel = selectedTemplate?.id === t.id;
                       return (
@@ -971,7 +971,7 @@ export default function App() {
                 </div>
 
                 {/* Motion + Voice row */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
+                <div className="motion-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
                   {[
                     { label: "Motion", icon: "4", items: MOTION_EFFECTS, value: motionEffect, setValue: setMotionEffect },
                     { label: "Intensity", icon: "5", items: MOTION_INTENSITIES, value: motionIntensity, setValue: setMotionIntensity },
@@ -1286,7 +1286,7 @@ export default function App() {
           </div>
 
           {/* ── Sidebar ── */}
-          <aside style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          <aside style={{ display: isMobile ? "none" : "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
 
             {/* JARVIS status */}
             <div className="glass-card" style={{ padding: "1.1rem" }}>

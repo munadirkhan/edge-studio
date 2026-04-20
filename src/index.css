@@ -235,6 +235,26 @@ select.input-base option { background: #0e0e14; }
   }
 }
 
+/* ── Clip Studio mobile ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Prevent any wide fixed elements from causing horizontal scroll */
+  .app-main { overflow-x: hidden; }
+
+  /* Landing page grids collapse to 1 col */
+  .landing-stats   { grid-template-columns: repeat(2, 1fr) !important; }
+  .landing-features { grid-template-columns: 1fr !important; }
+  .landing-steps   { grid-template-columns: 1fr !important; }
+
+  /* Template grid: 2 cols on mobile */
+  .template-grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Duration cards: wrap instead of 5-wide */
+  .duration-grid { grid-template-columns: repeat(3, 1fr) !important; }
+
+  /* Motion/voice row: stack on mobile */
+  .motion-row { grid-template-columns: 1fr !important; }
+}
+
 /* ── CSS perf hints ──────────────────────────────────────── */
 .generating-ring { will-change: transform; }
 .btn-accent { will-change: transform, opacity; }

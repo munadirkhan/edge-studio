@@ -143,6 +143,14 @@ export default function ClipStudio() {
   const [scaleEffect, setScaleEffect]   = useState(false);
   const [aspectRatio, setAspectRatio]   = useState("9:16");
 
+  // ── Responsive ───────────────────────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   // ── Export state ─────────────────────────────────────────────────────────
   const [exporting, setExporting]       = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -403,14 +411,14 @@ export default function ClipStudio() {
   const isFailed  = job?.status === "failed";
 
   // Preview dimensions (scale canvas to fit column)
-  const previewH    = aspectRatio === "9:16" ? 500 : 280;
+  const previewH    = isMobile ? (aspectRatio === "9:16" ? 300 : 180) : (aspectRatio === "9:16" ? 500 : 280);
   const previewW    = aspectRatio === "9:16" ? Math.round(previewH * 9 / 16) : Math.round(previewH * 16 / 9);
 
   return (
-    <div style={{ display: "flex", gap: "1.5rem", minHeight: "80vh", alignItems: "flex-start" }}>
+    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? "1rem" : "1.5rem", minHeight: isMobile ? "auto" : "80vh", alignItems: "flex-start" }}>
 
       {/* ════ LEFT CONTROLS ════════════════════════════════════════════════ */}
-      <div style={{ width: 380, flexShrink: 0, display: "flex", flexDirection: "column", gap: "0" }}>
+      <div style={{ width: isMobile ? "100%" : 380, flexShrink: 0, display: "flex", flexDirection: "column", gap: "0" }}>
 
         {/* ── Step 1: Input ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: "1.25rem" }}>
@@ -747,14 +755,14 @@ export default function ClipStudio() {
       </div>
 
       {/* ════ RIGHT PREVIEW ════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, minWidth: 0, position: "sticky", top: "1rem" }}>
+      <div style={{ flex: 1, minWidth: 0, position: isMobile ? "static" : "sticky", top: "1rem" }}>
         <div className="glass-card" style={{ padding: "1.25rem" }}>
           <p style={{ margin: "0 0 1rem", fontWeight: 700, fontSize: "0.95rem", color: "#9a9490" }}>Preview</p>
 
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             background: "#0a0a0f", borderRadius: 12, overflow: "hidden",
-            minHeight: 300,
+            minHeight: isMobile ? 180 : 300,
           }}>
             {videoSrc ? (
               <div style={{ position: "relative", display: "inline-block" }}>
