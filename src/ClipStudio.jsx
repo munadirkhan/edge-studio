@@ -140,8 +140,24 @@ function JobCard({ entry, onLoadClip }) {
         </div>
       )}
 
-      {isFailed && (
-        <p style={{ margin: 0, fontSize: "0.68rem", color: "#f87171" }}>{job.error?.slice(0, 100)}</p>
+      {isFailed && job.error === "NEEDS_COOKIES" && (
+        <div style={{ marginTop: "0.25rem" }}>
+          <p style={{ margin: "0 0 0.4rem", fontSize: "0.72rem", fontWeight: 700, color: "#f0ede8" }}>YouTube requires cookie auth from your browser</p>
+          <ol style={{ margin: 0, paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+            {[
+              <>Install <a href="https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>Get cookies.txt LOCALLY</a> (Chrome)</>,
+              "Go to youtube.com while signed in",
+              'Click the extension → "Current Site Only" → copy the file text',
+              "Railway dashboard → your service → Variables → add YOUTUBE_COOKIES → paste",
+              "Redeploy (Railway does this automatically on save)",
+            ].map((step, i) => (
+              <li key={i} style={{ fontSize: "0.68rem", color: "#9a9490", lineHeight: 1.5 }}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+      {isFailed && job.error !== "NEEDS_COOKIES" && (
+        <p style={{ margin: 0, fontSize: "0.68rem", color: "#f87171" }}>{job.error?.slice(0, 120)}</p>
       )}
 
       {isDone && job.clips?.length > 0 && (

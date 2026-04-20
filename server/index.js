@@ -550,9 +550,10 @@ async function runPipeline(job, { url, clipCount, clipDuration, fontKey = "impac
   } catch (err) {
     job.status = "failed";
     job.stage = "Failed";
-    job.error = err.message;
-    console.error(`[pipeline:${jobId}] Error:`, err);
-    // Clean up both dirs on failure
+    job.error = err.message === "NEEDS_COOKIES"
+      ? "NEEDS_COOKIES"
+      : err.message;
+    console.error(`[pipeline:${jobId}] Error:`, err.message?.slice(0, 200));
     fs.rm(jobUploads, { recursive: true, force: true }, () => {});
     fs.rm(jobOutputs, { recursive: true, force: true }, () => {});
   }
