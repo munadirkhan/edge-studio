@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 const FREE_FEATURES = [
-  "3 video exports total",
+  "7 video exports total",
   "AI image generation",
   "AI voiceover",
   "Save to account",
@@ -63,7 +63,7 @@ export default function PaywallModal({ onClose, exportsUsed = 3, onUpgrade }) {
         <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
           <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>⚡</div>
           <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
-            You've used your {exportsUsed} free exports
+            You've used your {exportsUsed}/7 free exports
           </h2>
           <p style={{ margin: 0, fontSize: "0.85rem", color: "#6e6a66" }}>
             Upgrade to Pro for unlimited exports and ClipStudio access.
@@ -105,7 +105,7 @@ export default function PaywallModal({ onClose, exportsUsed = 3, onUpgrade }) {
           onClick={handleUpgrade}
           disabled={loading}
         >
-          {loading ? "Redirecting to checkout…" : "Upgrade to Pro — $12/month →"}
+          {loading ? "Redirecting to checkout…" : "Upgrade to Pro — $7/mo →"}
         </button>
 
         <p style={{ margin: "0.75rem 0 0", textAlign: "center", fontSize: "0.68rem", color: "#4e4b48" }}>

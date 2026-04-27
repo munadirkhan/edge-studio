@@ -20,7 +20,7 @@ const OUTPUTS_DIR = path.join(__dirname, "outputs");
 
 [UPLOADS_DIR, OUTPUTS_DIR].forEach((d) => fs.mkdirSync(d, { recursive: true }));
 
-const FREE_EXPORT_LIMIT = 3;
+const FREE_EXPORT_LIMIT = 7;
 
 const app = express();
 app.use(cors());

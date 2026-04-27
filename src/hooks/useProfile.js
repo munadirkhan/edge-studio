@@ -30,7 +30,7 @@ export function useProfile() {
 
   const exportsUsed = profile?.exports_used ?? 0;
   const isPro       = profile?.is_pro ?? false;
-  const exportsLeft = Math.max(0, 3 - exportsUsed);
+  const exportsLeft = Math.max(0, 7 - exportsUsed);
 
   return { profile, loading, refetch: fetchProfile, exportsUsed, exportsLeft, isPro };
 }
