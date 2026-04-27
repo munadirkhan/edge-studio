@@ -7,6 +7,8 @@ import Sidebar from "./components/Sidebar";
 import ProjectsPage from "./components/ProjectsPage";
 import { TermsModal, PrivacyModal } from "./components/TermsModal";
 import { useToast } from "./components/Toast";
+import { useProfile } from "./hooks/useProfile";
+import PaywallModal from "./components/PaywallModal";
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -74,8 +76,10 @@ const VOICES = [
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const toast = useToast();
+  const { exportsUsed, exportsLeft, isPro, refetch: refetchProfile } = useProfile();
+  const [showPaywall, setShowPaywall] = useState(false);
   const [showTerms,   setShowTerms]   = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [mousePos, setMousePos]       = useState({ x: -1000, y: -1000 });
@@ -84,6 +88,16 @@ export default function App() {
     const onMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+  // Handle Stripe success redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("upgraded") === "true") {
+      toast.success("You're on Pro! Unlimited exports unlocked.");
+      refetchProfile();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, []);
 
   // Top-level mode — null = landing page
@@ -530,6 +544,33 @@ export default function App() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // ── Paywall gate ──────────────────────────────────────────────
+    if (!user) {
+      toast.error("Sign in to export your video.");
+      return;
+    }
+    if (!isPro) {
+      try {
+        const res = await fetch("/api/exports/use", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
+          },
+        });
+        const data = await res.json();
+        if (res.status === 403 && data.error === "limit_reached") {
+          setShowPaywall(true);
+          return;
+        }
+        if (!res.ok) throw new Error(data.error || "Export check failed");
+        refetchProfile();
+      } catch (err) {
+        toast.error(err.message);
+        return;
+      }
+    }
+
     const mimeType = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((m) =>
       MediaRecorder.isTypeSupported(m)
     );
@@ -659,6 +700,7 @@ export default function App() {
 
         {showTerms   && <TermsModal   onClose={() => setShowTerms(false)} />}
         {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
+        {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} exportsUsed={exportsUsed} />}
 
         {/* ══ LANDING PAGE ══ */}
         {!mode && (
@@ -1246,10 +1288,15 @@ export default function App() {
                       </button>
                       <button
                         className="btn-accent"
-                        style={{ flex: 2, padding: "0.75rem", fontSize: "0.85rem" }}
+                        style={{ flex: 2, padding: "0.75rem", fontSize: "0.85rem", position: "relative" }}
                         onClick={exportVideo}
                       >
                         {voiceBuffer ? "↓ Video + Voice" : "↓ Video"}
+                        {user && !isPro && (
+                          <span style={{ position: "absolute", top: -7, right: -7, fontSize: "0.55rem", fontWeight: 800, background: exportsLeft === 0 ? "#f87171" : "#c9a96e", color: "#0a0806", borderRadius: 9, padding: "0.15rem 0.35rem", lineHeight: 1 }}>
+                            {exportsLeft === 0 ? "0 left" : `${exportsLeft} left`}
+                          </span>
+                        )}
                       </button>
                     </div>
 

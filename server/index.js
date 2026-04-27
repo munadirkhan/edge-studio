@@ -6,6 +6,7 @@ import express from "express";
 import cors from "cors";
 import fs from "fs";
 import { v4 as uuid } from "uuid";
+import Stripe from "stripe";
 
 import multer from "multer";
 import { downloadVideo, getVideoInfo } from "./services/downloader.js";
@@ -17,11 +18,48 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 const OUTPUTS_DIR = path.join(__dirname, "outputs");
 
-// Ensure dirs exist
 [UPLOADS_DIR, OUTPUTS_DIR].forEach((d) => fs.mkdirSync(d, { recursive: true }));
+
+const FREE_EXPORT_LIMIT = 3;
 
 const app = express();
 app.use(cors());
+
+// ── Stripe webhook (must be before express.json — needs raw body) ─────────────
+app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) return res.status(500).json({ error: "Webhook secret not configured" });
+
+  let event;
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch (err) {
+    console.error("[stripe/webhook] Signature failed:", err.message);
+    return res.status(400).json({ error: err.message });
+  }
+
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+
+  const customerId = event.data.object.customer;
+
+  if (event.type === "checkout.session.completed" || event.type === "customer.subscription.updated") {
+    const status = event.data.object.status ?? event.data.object.subscription?.status;
+    const isPro = !status || status === "active" || status === "trialing";
+    await supabase.from("profiles").update({ is_pro: isPro }).eq("stripe_customer_id", customerId);
+    console.log(`[stripe/webhook] ${event.type} → is_pro=${isPro} for customer ${customerId}`);
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    await supabase.from("profiles").update({ is_pro: false }).eq("stripe_customer_id", customerId);
+    console.log(`[stripe/webhook] subscription.deleted → is_pro=false for ${customerId}`);
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json({ limit: "15mb" }));
 
 // Serve output clips for download
@@ -323,6 +361,73 @@ app.get("/video/jobs", (_req, res) => {
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 20);
   res.json(list);
+});
+
+// ── Billing + Export gating ───────────────────────────────────────────────────
+
+// POST /api/stripe/checkout — create a Stripe Checkout session
+app.post("/api/stripe/checkout", async (req, res) => {
+  try {
+    const { supabase, user } = await getSupabaseUser(req.headers.authorization);
+    const { returnUrl } = req.body;
+
+    if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ error: "Stripe not configured" });
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    let { data: profile } = await supabase.from("profiles").select("stripe_customer_id").eq("id", user.id).single();
+    if (!profile) {
+      const { data } = await supabase.from("profiles").insert({ id: user.id }).select().single();
+      profile = data;
+    }
+
+    let customerId = profile?.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({ email: user.email, metadata: { supabase_uid: user.id } });
+      customerId = customer.id;
+      await supabase.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: "subscription",
+      line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
+      success_url: `${returnUrl || "https://edge-studio.vercel.app"}?upgraded=true`,
+      cancel_url: returnUrl || "https://edge-studio.vercel.app",
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("[stripe/checkout]", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/exports/use — check limit and increment export counter
+app.post("/api/exports/use", async (req, res) => {
+  try {
+    const { supabase, user } = await getSupabaseUser(req.headers.authorization);
+
+    let { data: profile } = await supabase
+      .from("profiles").select("exports_used, is_pro").eq("id", user.id).single();
+
+    if (!profile) {
+      const { data } = await supabase.from("profiles").insert({ id: user.id }).select().single();
+      profile = data || { exports_used: 0, is_pro: false };
+    }
+
+    if (profile.is_pro) return res.json({ ok: true, is_pro: true });
+
+    if (profile.exports_used >= FREE_EXPORT_LIMIT) {
+      return res.status(403).json({ error: "limit_reached", exports_used: profile.exports_used, limit: FREE_EXPORT_LIMIT });
+    }
+
+    const newCount = profile.exports_used + 1;
+    await supabase.from("profiles").update({ exports_used: newCount }).eq("id", user.id);
+
+    res.json({ ok: true, exports_used: newCount, limit: FREE_EXPORT_LIMIT });
+  } catch (err) {
+    res.status(err.message.includes("token") || err.message.includes("auth") ? 401 : 500).json({ error: err.message });
+  }
 });
 
 // ── Projects API ─────────────────────────────────────────────────────────────
