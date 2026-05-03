@@ -5,15 +5,15 @@ const FREE_FEATURES = [
   "7 video exports total",
   "AI image generation",
   "AI voiceover",
+  "ClipStudio: YouTube → clips",
   "Save to account",
   "All templates",
 ];
 
 const PRO_FEATURES = [
   "Unlimited exports",
-  "ClipStudio: YouTube → clips",
-  "Bulk processing (5 URLs at once)",
-  "Priority generation",
+  "No EdgeStudio watermark",
+  "Bulk processing (up to 5 URLs)",
   "Early access to new features",
 ];
 
@@ -87,7 +87,7 @@ export default function PaywallModal({ onClose, exportsUsed = 3, onUpgrade }) {
           <div style={{ padding: "1rem", borderRadius: 10, border: "1px solid var(--accent-border)", background: "var(--accent-dim)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.75rem" }}>
               <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", color: "var(--accent)" }}>PRO</p>
-              <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--accent)" }}>$12/mo</span>
+              <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--accent)" }}>$7/mo</span>
             </div>
             {PRO_FEATURES.map(f => (
               <div key={f} style={{ display: "flex", gap: "0.4rem", alignItems: "flex-start", marginBottom: "0.4rem" }}>

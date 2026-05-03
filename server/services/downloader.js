@@ -102,21 +102,3 @@ export async function getVideoInfo(url) {
   return {}; // non-fatal
 }
 
-export async function getVideoInfo(url) {
-  const clients = ["ios", "mweb", "web"];
-  for (const client of clients) {
-    try {
-      const args = [
-        url,
-        "--extractor-args", `youtube:player_client=${client}`,
-        "--dump-json", "--no-playlist", "--quiet",
-        ...getCookieArgs(),
-      ];
-      const { stdout } = await execFileAsync(YT_DLP, args, { timeout: 30000 });
-      return JSON.parse(stdout);
-    } catch {
-      // try next client
-    }
-  }
-  return {}; // non-fatal, pipeline continues without metadata
-}

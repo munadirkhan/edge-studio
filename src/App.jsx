@@ -289,23 +289,25 @@ export default function App() {
       }
     }
 
-    // ── EdgeStudio watermark ──────────────────────────────────
-    const stampY = H - 80;
-    ctx.save();
-    ctx.translate(W / 2, stampY);
-    ctx.rotate(Math.PI / 4);
-    ctx.fillStyle = T.accentColor;
-    ctx.globalAlpha = 0.6;
-    ctx.fillRect(-5, -5, 10, 10);
-    ctx.restore();
-    ctx.globalAlpha = 0.4;
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "600 14px 'Inter', -apple-system, sans-serif";
-    ctx.letterSpacing = "0.12em";
-    ctx.textAlign = "center";
-    ctx.fillText("EdgeStudio", W / 2, stampY + 28);
-    ctx.globalAlpha = 1;
-    ctx.letterSpacing = "0em";
+    // ── EdgeStudio watermark (free users only) ────────────────
+    if (!isPro) {
+      const stampY = H - 80;
+      ctx.save();
+      ctx.translate(W / 2, stampY);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = T.accentColor;
+      ctx.globalAlpha = 0.6;
+      ctx.fillRect(-5, -5, 10, 10);
+      ctx.restore();
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "600 14px 'Inter', -apple-system, sans-serif";
+      ctx.letterSpacing = "0.12em";
+      ctx.textAlign = "center";
+      ctx.fillText("EdgeStudio", W / 2, stampY + 28);
+      ctx.globalAlpha = 1;
+      ctx.letterSpacing = "0em";
+    }
   }
 
   // ─── Image generation ────────────────────────────────────────────────────────
