@@ -46,7 +46,7 @@ export function getCookieDebugInfo() {
   })() : { hasCookies: false };
   return {
     ...cookieInfo,
-    proxy: proxy ? proxy.replace(/:([^:@]+)@/, ":***@") : null,
+    proxy: proxy ? proxy.trim().replace(/:([^:@]+)@/, ":***@") : null,
     hasProxy: !!proxy,
   };
 }
@@ -71,11 +71,11 @@ export async function downloadVideo(url, outputDir, jobId) {
   const cookieArgs = getCookieArgs();
 
   const proxyArgs = process.env.YTDLP_PROXY
-    ? ["--proxy", process.env.YTDLP_PROXY]
+    ? ["--proxy", process.env.YTDLP_PROXY.trim()]
     : [];
 
   if (proxyArgs.length) {
-    console.log(`[downloader] Using proxy: ${process.env.YTDLP_PROXY.replace(/:([^:@]+)@/, ":***@")}`);
+    console.log(`[downloader] Using proxy: ${process.env.YTDLP_PROXY.trim().replace(/:([^:@]+)@/, ":***@")}`);
   }
 
   const baseArgs = [
@@ -125,7 +125,7 @@ export async function downloadVideo(url, outputDir, jobId) {
 }
 
 export async function getVideoInfo(url) {
-  const proxyArgs = process.env.YTDLP_PROXY ? ["--proxy", process.env.YTDLP_PROXY] : [];
+  const proxyArgs = process.env.YTDLP_PROXY ? ["--proxy", process.env.YTDLP_PROXY.trim()] : [];
   const clients = ["web_creator", "ios", "mweb", "web"];
   for (const client of clients) {
     try {
