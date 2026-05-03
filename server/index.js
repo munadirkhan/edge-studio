@@ -9,7 +9,7 @@ import { v4 as uuid } from "uuid";
 import Stripe from "stripe";
 
 import multer from "multer";
-import { downloadVideo, getVideoInfo } from "./services/downloader.js";
+import { downloadVideo, getVideoInfo, getCookieDebugInfo } from "./services/downloader.js";
 import { extractAudio, transcribeAudio } from "./services/transcriber.js";
 import { findViralMoments } from "./services/moments.js";
 import { createClip, buildSRT, addCaptions, generateThumbnail } from "./services/clipper.js";
@@ -67,6 +67,9 @@ app.use("/clips", express.static(OUTPUTS_DIR));
 
 // Health check for Railway
 app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// Cookie diagnostic — visit this URL to see if cookies loaded correctly
+app.get("/debug/cookies", (_req, res) => res.json(getCookieDebugInfo()));
 
 // In-memory job store (MVP — replace with DB for prod)
 const jobs = new Map();

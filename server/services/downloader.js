@@ -9,13 +9,39 @@ const execFileAsync = promisify(execFile);
 
 let _cookiePath = null;
 function getCookieArgs() {
-  const cookies = process.env.YOUTUBE_COOKIES;
-  if (!cookies) return [];
+  const raw = process.env.YOUTUBE_COOKIES;
+  if (!raw) return [];
   if (!_cookiePath) {
     _cookiePath = path.join(os.tmpdir(), "yt-cookies.txt");
-    fs.writeFileSync(_cookiePath, cookies, "utf8");
+    // Normalize line endings — Railway can convert \r\n, and tabs must stay as tabs
+    const normalized = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trimEnd() + "\n";
+    fs.writeFileSync(_cookiePath, normalized, "utf8");
+    const lines = normalized.split("\n").filter(Boolean);
+    console.log(`[cookies] Loaded ${lines.length} lines. First: "${lines[0]?.slice(0, 60)}"`);
+    // Warn if tabs are missing (means Railway mangled the format)
+    const dataLines = lines.filter(l => !l.startsWith("#"));
+    const hasTabs = dataLines.some(l => l.includes("\t"));
+    if (!hasTabs && dataLines.length > 0) {
+      console.warn("[cookies] WARNING: No tab characters found — cookie file may be space-separated (broken). Re-export and paste carefully.");
+    }
   }
   return ["--cookies", _cookiePath];
+}
+
+export function getCookieDebugInfo() {
+  const raw = process.env.YOUTUBE_COOKIES;
+  if (!raw) return { hasCookies: false };
+  const lines = raw.replace(/\r\n/g, "\n").split("\n").filter(Boolean);
+  const dataLines = lines.filter(l => !l.startsWith("#"));
+  return {
+    hasCookies: true,
+    totalLines: lines.length,
+    dataLines: dataLines.length,
+    hasTabs: dataLines.some(l => l.includes("\t")),
+    hasNetscapeHeader: lines[0]?.includes("Netscape") ?? false,
+    firstDataLine: dataLines[0]?.slice(0, 80) ?? "(none)",
+    charCount: raw.length,
+  };
 }
 
 const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
