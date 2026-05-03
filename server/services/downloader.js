@@ -30,17 +30,24 @@ function getCookieArgs() {
 
 export function getCookieDebugInfo() {
   const raw = process.env.YOUTUBE_COOKIES;
-  if (!raw) return { hasCookies: false };
-  const lines = raw.replace(/\r\n/g, "\n").split("\n").filter(Boolean);
-  const dataLines = lines.filter(l => !l.startsWith("#"));
+  const proxy = process.env.YTDLP_PROXY;
+  const cookieInfo = raw ? (() => {
+    const lines = raw.replace(/\r\n/g, "\n").split("\n").filter(Boolean);
+    const dataLines = lines.filter(l => !l.startsWith("#"));
+    return {
+      hasCookies: true,
+      totalLines: lines.length,
+      dataLines: dataLines.length,
+      hasTabs: dataLines.some(l => l.includes("\t")),
+      hasNetscapeHeader: lines[0]?.includes("Netscape") ?? false,
+      firstDataLine: dataLines[0]?.slice(0, 80) ?? "(none)",
+      charCount: raw.length,
+    };
+  })() : { hasCookies: false };
   return {
-    hasCookies: true,
-    totalLines: lines.length,
-    dataLines: dataLines.length,
-    hasTabs: dataLines.some(l => l.includes("\t")),
-    hasNetscapeHeader: lines[0]?.includes("Netscape") ?? false,
-    firstDataLine: dataLines[0]?.slice(0, 80) ?? "(none)",
-    charCount: raw.length,
+    ...cookieInfo,
+    proxy: proxy ? proxy.replace(/:([^:@]+)@/, ":***@") : null,
+    hasProxy: !!proxy,
   };
 }
 
@@ -63,6 +70,14 @@ export async function downloadVideo(url, outputDir, jobId) {
   const outputTemplate = path.join(outputDir, `${jobId}.%(ext)s`);
   const cookieArgs = getCookieArgs();
 
+  const proxyArgs = process.env.YTDLP_PROXY
+    ? ["--proxy", process.env.YTDLP_PROXY]
+    : [];
+
+  if (proxyArgs.length) {
+    console.log(`[downloader] Using proxy: ${process.env.YTDLP_PROXY.replace(/:([^:@]+)@/, ":***@")}`);
+  }
+
   const baseArgs = [
     url,
     "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]",
@@ -75,6 +90,7 @@ export async function downloadVideo(url, outputDir, jobId) {
     "--add-header", "Accept-Language:en-US,en;q=0.9",
     "--socket-timeout", "30",
     ...cookieArgs,
+    ...proxyArgs,
   ];
 
   let lastErr;
@@ -109,6 +125,7 @@ export async function downloadVideo(url, outputDir, jobId) {
 }
 
 export async function getVideoInfo(url) {
+  const proxyArgs = process.env.YTDLP_PROXY ? ["--proxy", process.env.YTDLP_PROXY] : [];
   const clients = ["web_creator", "ios", "mweb", "web"];
   for (const client of clients) {
     try {
@@ -118,6 +135,7 @@ export async function getVideoInfo(url) {
         "--dump-json", "--no-playlist", "--quiet",
         "--add-header", `User-Agent:${BROWSER_UA}`,
         ...getCookieArgs(),
+        ...proxyArgs,
       ];
       const { stdout } = await execFileAsync(YT_DLP, args, { timeout: 30000 });
       return JSON.parse(stdout);
