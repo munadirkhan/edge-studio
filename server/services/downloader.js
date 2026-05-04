@@ -55,10 +55,13 @@ const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 
 // Each attempt is { client, extraArgs }
 const DOWNLOAD_ATTEMPTS = [
-  // Newer clients that bypass bot detection better in 2025
+  // Impersonate real Chrome TLS fingerprint — bypasses IP-based bot detection
+  { client: "web_creator", extraArgs: ["--impersonate", "chrome"] },
+  { client: "web",         extraArgs: ["--impersonate", "chrome"] },
+  { client: "tv_embedded", extraArgs: ["--impersonate", "chrome"] },
+  // Fallback without impersonation
   { client: "web_creator" },
   { client: "tv_embedded" },
-  { client: "web_creator", extraArgs: ["--no-check-certificate"] },
   { client: "ios" },
   { client: "tv" },
   { client: "mweb" },
@@ -66,30 +69,47 @@ const DOWNLOAD_ATTEMPTS = [
   { client: "web" },
 ];
 
-// Try Cobalt API first — handles YouTube without needing cookies or proxy
+// Try Cobalt API — multiple instances in case one is down or rate-limited
+const COBALT_INSTANCES = [
+  process.env.COBALT_API_URL,
+  "https://api.cobalt.tools",
+  "https://cobalt.api.timelessnesses.me",
+].filter(Boolean);
+
 async function tryDownloadViaCobalt(url, outputDir, jobId) {
-  const COBALT_API = process.env.COBALT_API_URL || "https://api.cobalt.tools";
-  const response = await fetch(COBALT_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({ url, videoQuality: "720", filenameStyle: "basic" }),
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!response.ok) throw new Error(`Cobalt HTTP ${response.status}`);
-  const data = await response.json();
+  let lastErr;
+  for (const instance of COBALT_INSTANCES) {
+    try {
+      console.log(`[cobalt] Trying ${instance}`);
+      const headers = { "Content-Type": "application/json", "Accept": "application/json" };
+      if (process.env.COBALT_API_KEY) headers["Authorization"] = `Api-Key ${process.env.COBALT_API_KEY}`;
 
-  // Cobalt returns { status: "stream"|"redirect"|"tunnel", url: "..." }
-  if (!data.url) throw new Error(`Cobalt: no url in response (status=${data.status})`);
+      const response = await fetch(instance, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ url, videoQuality: "720", filenameStyle: "basic" }),
+        signal: AbortSignal.timeout(20000),
+      });
+      const text = await response.text();
+      console.log(`[cobalt] ${instance} → HTTP ${response.status}: ${text.slice(0, 120)}`);
+      if (!response.ok) { lastErr = new Error(`HTTP ${response.status}: ${text.slice(0, 80)}`); continue; }
 
-  // Download the file
-  const fileResponse = await fetch(data.url, { signal: AbortSignal.timeout(5 * 60 * 1000) });
-  if (!fileResponse.ok) throw new Error(`Cobalt download HTTP ${fileResponse.status}`);
+      const data = JSON.parse(text);
+      if (!data.url) { lastErr = new Error(`No url in response (status=${data.status})`); continue; }
 
-  const outputPath = path.join(outputDir, `${jobId}.mp4`);
-  const buffer = Buffer.from(await fileResponse.arrayBuffer());
-  fs.writeFileSync(outputPath, buffer);
-  console.log(`[downloader] ✓ Downloaded via Cobalt (${buffer.length} bytes)`);
-  return outputPath;
+      const fileResponse = await fetch(data.url, { signal: AbortSignal.timeout(5 * 60 * 1000) });
+      if (!fileResponse.ok) { lastErr = new Error(`Download HTTP ${fileResponse.status}`); continue; }
+
+      const outputPath = path.join(outputDir, `${jobId}.mp4`);
+      fs.writeFileSync(outputPath, Buffer.from(await fileResponse.arrayBuffer()));
+      console.log(`[cobalt] ✓ Downloaded via ${instance}`);
+      return outputPath;
+    } catch (err) {
+      console.warn(`[cobalt] ${instance} failed: ${err.message}`);
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error("All Cobalt instances failed");
 }
 
 export async function downloadVideo(url, outputDir, jobId) {
