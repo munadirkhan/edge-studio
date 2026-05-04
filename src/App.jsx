@@ -9,6 +9,7 @@ import { TermsModal, PrivacyModal } from "./components/TermsModal";
 import { useToast } from "./components/Toast";
 import { useProfile } from "./hooks/useProfile";
 import PaywallModal from "./components/PaywallModal";
+import OnboardingModal, { useOnboarding } from "./components/OnboardingModal";
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ export default function App() {
   const toast = useToast();
   const { exportsUsed, exportsLeft, isPro, refetch: refetchProfile } = useProfile();
   const [showPaywall, setShowPaywall] = useState(false);
+  const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding();
   const [showTerms,   setShowTerms]   = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [mousePos, setMousePos]       = useState({ x: -1000, y: -1000 });
@@ -700,9 +702,10 @@ export default function App() {
 
         <div style={{ position: "relative", zIndex: 1 }}>
 
-        {showTerms   && <TermsModal   onClose={() => setShowTerms(false)} />}
-        {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
-        {showPaywall && <PaywallModal onClose={() => setShowPaywall(false)} exportsUsed={exportsUsed} />}
+        {showTerms      && <TermsModal      onClose={() => setShowTerms(false)} />}
+        {showPrivacy    && <PrivacyModal    onClose={() => setShowPrivacy(false)} />}
+        {showPaywall    && <PaywallModal    onClose={() => setShowPaywall(false)} exportsUsed={exportsUsed} />}
+        {showOnboarding && <OnboardingModal onClose={dismissOnboarding} />}
 
         {/* ══ LANDING PAGE ══ */}
         {!mode && (
