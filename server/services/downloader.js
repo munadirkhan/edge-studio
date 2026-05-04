@@ -13,12 +13,10 @@ function getCookieArgs() {
   if (!raw) return [];
   if (!_cookiePath) {
     _cookiePath = path.join(os.tmpdir(), "yt-cookies.txt");
-    // Normalize line endings — Railway can convert \r\n, and tabs must stay as tabs
     const normalized = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trimEnd() + "\n";
     fs.writeFileSync(_cookiePath, normalized, "utf8");
     const lines = normalized.split("\n").filter(Boolean);
     console.log(`[cookies] Loaded ${lines.length} lines. First: "${lines[0]?.slice(0, 60)}"`);
-    // Warn if tabs are missing (means Railway mangled the format)
     const dataLines = lines.filter(l => !l.startsWith("#"));
     const hasTabs = dataLines.some(l => l.includes("\t"));
     if (!hasTabs && dataLines.length > 0) {
@@ -55,11 +53,9 @@ const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 
 // Each attempt is { client, extraArgs }
 const DOWNLOAD_ATTEMPTS = [
-  // Impersonate real Chrome TLS fingerprint — bypasses IP-based bot detection
   { client: "web_creator", extraArgs: ["--impersonate", "chrome"] },
   { client: "web",         extraArgs: ["--impersonate", "chrome"] },
   { client: "tv_embedded", extraArgs: ["--impersonate", "chrome"] },
-  // Fallback without impersonation
   { client: "web_creator" },
   { client: "tv_embedded" },
   { client: "ios" },
@@ -75,6 +71,23 @@ const COBALT_INSTANCES = [
   "https://api.cobalt.tools",
   "https://cobalt.api.timelessnesses.me",
 ].filter(Boolean);
+
+// Invidious instances — run on non-GCP infrastructure, proxy YouTube CDN URLs
+// CDN URLs they return (googlevideo.com) are not IP-locked and work from Railway
+const INVIDIOUS_INSTANCES = [
+  "https://inv.nadeko.net",
+  "https://yt.artemislena.eu",
+  "https://invidious.nerdvpn.de",
+  "https://yewtu.be",
+  "https://iv.datura.network",
+  "https://invidious.privacydev.net",
+  "https://invidious.flokinet.to",
+];
+
+function extractVideoId(url) {
+  const m = url.match(/(?:v=|youtu\.be\/|shorts\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
 
 async function tryDownloadViaCobalt(url, outputDir, jobId) {
   let lastErr;
@@ -112,16 +125,134 @@ async function tryDownloadViaCobalt(url, outputDir, jobId) {
   throw lastErr || new Error("All Cobalt instances failed");
 }
 
+// Invidious API → get signed YouTube CDN URL → download directly.
+// Invidious runs on non-GCP IPs so it successfully extracts URLs from YouTube.
+// The returned googlevideo.com CDN URLs are not IP-locked — they work from Railway.
+async function tryDownloadViaInvidious(url, outputDir, jobId) {
+  const videoId = extractVideoId(url);
+  if (!videoId) throw new Error("Could not extract YouTube video ID");
+
+  let lastErr;
+  for (const instance of INVIDIOUS_INSTANCES) {
+    try {
+      console.log(`[invidious] Trying ${instance} for ${videoId}`);
+      const apiRes = await fetch(`${instance}/api/v1/videos/${videoId}`, {
+        signal: AbortSignal.timeout(20000),
+        headers: { "User-Agent": BROWSER_UA },
+      });
+      if (!apiRes.ok) {
+        lastErr = new Error(`API HTTP ${apiRes.status}`);
+        console.warn(`[invidious] ${instance} API → ${apiRes.status}`);
+        continue;
+      }
+
+      const data = await apiRes.json();
+      if (data.error) {
+        lastErr = new Error(data.error);
+        console.warn(`[invidious] ${instance} API error: ${data.error}`);
+        continue;
+      }
+
+      // formatStreams = combined video+audio streams (up to 720p), prefer these
+      const combined = (data.formatStreams || [])
+        .filter(f => f.url && f.container === "mp4")
+        .sort((a, b) => (parseInt(b.resolution) || 0) - (parseInt(a.resolution) || 0));
+
+      const best = combined[0];
+      if (!best?.url) {
+        lastErr = new Error("No combined mp4 format available");
+        console.warn(`[invidious] ${instance}: no combined mp4`);
+        continue;
+      }
+
+      console.log(`[invidious] ${instance} → ${best.qualityLabel || best.quality} ${best.container}, downloading CDN URL`);
+      const dlRes = await fetch(best.url, {
+        signal: AbortSignal.timeout(5 * 60 * 1000),
+        headers: { "User-Agent": BROWSER_UA, "Referer": "https://www.youtube.com/" },
+      });
+
+      if (!dlRes.ok) {
+        lastErr = new Error(`CDN HTTP ${dlRes.status}`);
+        console.warn(`[invidious] CDN responded ${dlRes.status}`);
+        continue;
+      }
+
+      const outputPath = path.join(outputDir, `${jobId}.mp4`);
+      fs.writeFileSync(outputPath, Buffer.from(await dlRes.arrayBuffer()));
+      const sizeMB = (fs.statSync(outputPath).size / 1024 / 1024).toFixed(1);
+      console.log(`[invidious] ✓ Downloaded via ${instance} — ${sizeMB} MB`);
+      return outputPath;
+    } catch (err) {
+      console.warn(`[invidious] ${instance} failed: ${err.message}`);
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error("All Invidious instances failed");
+}
+
+// Try yt-dlp pointed at an Invidious URL — yt-dlp has a built-in Invidious extractor
+// that fetches formats via the Invidious API (bypassing YouTube bot detection on extraction)
+async function tryDownloadViaInvidiousYtDlp(url, outputDir, jobId) {
+  const videoId = extractVideoId(url);
+  if (!videoId) throw new Error("Could not extract YouTube video ID");
+
+  const outputTemplate = path.join(outputDir, `${jobId}.%(ext)s`);
+  let lastErr;
+
+  for (const instance of INVIDIOUS_INSTANCES) {
+    const invUrl = `${instance}/watch?v=${videoId}`;
+    try {
+      console.log(`[invidious-ytdlp] Trying ${instance}`);
+      const args = [
+        invUrl,
+        "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]",
+        "--merge-output-format", "mp4",
+        "-o", outputTemplate,
+        "--no-playlist",
+        "--quiet",
+        "--no-warnings",
+        "--socket-timeout", "30",
+      ];
+      await execFileAsync(YT_DLP, args, { timeout: 5 * 60 * 1000 });
+
+      const files = fs.readdirSync(outputDir).filter(f => f.startsWith(jobId) && f.endsWith(".mp4"));
+      if (files.length) {
+        console.log(`[invidious-ytdlp] ✓ Downloaded via ${instance}`);
+        return path.join(outputDir, files[0]);
+      }
+    } catch (err) {
+      console.warn(`[invidious-ytdlp] ${instance} failed: ${err.message?.slice(0, 120)}`);
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error("All Invidious yt-dlp attempts failed");
+}
+
 export async function downloadVideo(url, outputDir, jobId) {
-  // Try Cobalt first (no cookies/proxy needed)
+  // 1. Try Invidious API (free, non-GCP, no auth needed)
+  try {
+    return await tryDownloadViaInvidious(url, outputDir, jobId);
+  } catch (err) {
+    console.warn(`[downloader] Invidious API failed (${err.message}), trying Invidious via yt-dlp`);
+  }
+
+  // 2. Try yt-dlp pointed at Invidious URL (uses yt-dlp's Invidious extractor)
+  try {
+    return await tryDownloadViaInvidiousYtDlp(url, outputDir, jobId);
+  } catch (err) {
+    console.warn(`[downloader] Invidious yt-dlp failed (${err.message}), trying Cobalt`);
+  }
+
+  // 3. Try Cobalt
   if (process.env.COBALT_ENABLED !== "false") {
     try {
       return await tryDownloadViaCobalt(url, outputDir, jobId);
     } catch (err) {
-      console.warn(`[downloader] Cobalt failed (${err.message}), falling back to yt-dlp`);
+      console.warn(`[downloader] Cobalt failed (${err.message}), falling back to direct yt-dlp`);
     }
   }
 
+  // 4. Direct yt-dlp (likely blocked from Railway GCP, kept as last resort)
   const outputTemplate = path.join(outputDir, `${jobId}.%(ext)s`);
   const cookieArgs = getCookieArgs();
 
@@ -171,15 +302,39 @@ export async function downloadVideo(url, outputDir, jobId) {
     }
   }
 
-  const hasCookies = cookieArgs.length > 0;
   throw new Error(
-    hasCookies
-      ? `YouTube blocked all clients even with cookies. The cookie file may be expired — re-export and update YOUTUBE_COOKIES in Railway.`
-      : `NEEDS_COOKIES`
+    `YouTube download failed from all methods. ` +
+    `To fix: add a residential proxy — set YTDLP_PROXY in Railway env vars ` +
+    `(Webshare Static Residential, $2.99/mo at webshare.io).`
   );
 }
 
 export async function getVideoInfo(url) {
+  const videoId = extractVideoId(url);
+
+  // Try Invidious first — reliable from non-GCP infra
+  if (videoId) {
+    for (const instance of INVIDIOUS_INSTANCES) {
+      try {
+        const res = await fetch(`${instance}/api/v1/videos/${videoId}?fields=title,author,lengthSeconds,thumbnails`, {
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.error) continue;
+        return {
+          title: data.title,
+          uploader: data.author,
+          duration: data.lengthSeconds,
+          thumbnail: data.thumbnails?.[0]?.url,
+        };
+      } catch {
+        // try next
+      }
+    }
+  }
+
+  // Fall back to yt-dlp
   const proxyArgs = process.env.YTDLP_PROXY ? ["--proxy", process.env.YTDLP_PROXY.trim()] : [];
   const clients = ["web_creator", "ios", "mweb", "web"];
   for (const client of clients) {
@@ -200,4 +355,3 @@ export async function getVideoInfo(url) {
   }
   return {}; // non-fatal
 }
-
