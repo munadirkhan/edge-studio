@@ -66,7 +66,42 @@ const DOWNLOAD_ATTEMPTS = [
   { client: "web" },
 ];
 
+// Try Cobalt API first — handles YouTube without needing cookies or proxy
+async function tryDownloadViaCobalt(url, outputDir, jobId) {
+  const COBALT_API = process.env.COBALT_API_URL || "https://api.cobalt.tools";
+  const response = await fetch(COBALT_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({ url, videoQuality: "720", filenameStyle: "basic" }),
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!response.ok) throw new Error(`Cobalt HTTP ${response.status}`);
+  const data = await response.json();
+
+  // Cobalt returns { status: "stream"|"redirect"|"tunnel", url: "..." }
+  if (!data.url) throw new Error(`Cobalt: no url in response (status=${data.status})`);
+
+  // Download the file
+  const fileResponse = await fetch(data.url, { signal: AbortSignal.timeout(5 * 60 * 1000) });
+  if (!fileResponse.ok) throw new Error(`Cobalt download HTTP ${fileResponse.status}`);
+
+  const outputPath = path.join(outputDir, `${jobId}.mp4`);
+  const buffer = Buffer.from(await fileResponse.arrayBuffer());
+  fs.writeFileSync(outputPath, buffer);
+  console.log(`[downloader] ✓ Downloaded via Cobalt (${buffer.length} bytes)`);
+  return outputPath;
+}
+
 export async function downloadVideo(url, outputDir, jobId) {
+  // Try Cobalt first (no cookies/proxy needed)
+  if (process.env.COBALT_ENABLED !== "false") {
+    try {
+      return await tryDownloadViaCobalt(url, outputDir, jobId);
+    } catch (err) {
+      console.warn(`[downloader] Cobalt failed (${err.message}), falling back to yt-dlp`);
+    }
+  }
+
   const outputTemplate = path.join(outputDir, `${jobId}.%(ext)s`);
   const cookieArgs = getCookieArgs();
 
