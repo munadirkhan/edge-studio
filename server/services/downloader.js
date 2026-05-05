@@ -228,7 +228,44 @@ async function tryDownloadViaInvidiousYtDlp(url, outputDir, jobId) {
   throw lastErr || new Error("All Invidious yt-dlp attempts failed");
 }
 
+async function tryDownloadViaFlyProxy(url, outputDir, jobId) {
+  const flyUrl = process.env.FLY_PROXY_URL?.trim();
+  const secret = process.env.FLY_PROXY_SECRET?.trim();
+  if (!flyUrl) throw new Error("FLY_PROXY_URL not set");
+
+  console.log(`[fly-proxy] Downloading via ${flyUrl}`);
+  const res = await fetch(`${flyUrl}/download`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret ? { "x-proxy-secret": secret } : {}),
+    },
+    body: JSON.stringify({ url }),
+    signal: AbortSignal.timeout(6 * 60 * 1000),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Fly returned ${res.status}: ${text.slice(0, 100)}`);
+  }
+
+  const outputPath = path.join(outputDir, `${jobId}.mp4`);
+  fs.writeFileSync(outputPath, Buffer.from(await res.arrayBuffer()));
+  const sizeMB = (fs.statSync(outputPath).size / 1024 / 1024).toFixed(1);
+  console.log(`[fly-proxy] ✓ ${sizeMB} MB`);
+  return outputPath;
+}
+
 export async function downloadVideo(url, outputDir, jobId) {
+  // 0. Try Fly.io proxy — different IP range, not blocked by YouTube
+  if (process.env.FLY_PROXY_URL) {
+    try {
+      return await tryDownloadViaFlyProxy(url, outputDir, jobId);
+    } catch (err) {
+      console.warn(`[downloader] Fly proxy failed (${err.message}), trying Invidious`);
+    }
+  }
+
   // 1. Try Invidious API (free, non-GCP, no auth needed)
   try {
     return await tryDownloadViaInvidious(url, outputDir, jobId);
