@@ -79,7 +79,7 @@ const VOICES = [
 export default function App() {
   const { user, session } = useAuth();
   const toast = useToast();
-  const { exportsUsed, exportsLeft, isPro, refetch: refetchProfile } = useProfile();
+  const { plan, exportsUsed, exportsLeft, isPaid, isPro, refetch: refetchProfile } = useProfile();
   const [showPaywall, setShowPaywall] = useState(false);
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding();
   const [showTerms,   setShowTerms]   = useState(false);
@@ -95,8 +95,17 @@ export default function App() {
   // Handle Stripe success redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("upgraded") === "true") {
-      toast.success("You're on Pro! Unlimited exports unlocked.");
+    const upgraded = params.get("upgraded");
+    if (upgraded === "pro") {
+      toast.success("You're on Pro! Unlimited exports + all features unlocked.");
+      refetchProfile();
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (upgraded === "starter") {
+      toast.success("You're on Starter! 20 exports unlocked, no watermark.");
+      refetchProfile();
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (upgraded === "true") {
+      toast.success("Upgraded! Exports unlocked.");
       refetchProfile();
       window.history.replaceState({}, "", window.location.pathname);
     }
@@ -292,7 +301,7 @@ export default function App() {
     }
 
     // ── EdgeStudio watermark (free users only) ────────────────
-    if (!isPro) {
+    if (!isPaid) {
       const stampY = H - 80;
       ctx.save();
       ctx.translate(W / 2, stampY);
@@ -553,7 +562,7 @@ export default function App() {
       toast.error("Sign in to export your video.");
       return;
     }
-    if (!isPro) {
+    if (!isPro) { // free and starter users have export limits
       try {
         const res = await fetch("/api/exports/use", {
           method: "POST",
@@ -704,7 +713,7 @@ export default function App() {
 
         {showTerms      && <TermsModal      onClose={() => setShowTerms(false)} />}
         {showPrivacy    && <PrivacyModal    onClose={() => setShowPrivacy(false)} />}
-        {showPaywall    && <PaywallModal    onClose={() => setShowPaywall(false)} exportsUsed={exportsUsed} />}
+        {showPaywall    && <PaywallModal    onClose={() => setShowPaywall(false)} exportsUsed={exportsUsed} currentPlan={plan} />}
         {showOnboarding && <OnboardingModal onClose={dismissOnboarding} />}
 
         {/* ══ LANDING PAGE ══ */}
@@ -1301,6 +1310,9 @@ export default function App() {
                           <span style={{ position: "absolute", top: -7, right: -7, fontSize: "0.55rem", fontWeight: 800, background: exportsLeft === 0 ? "#f87171" : "#c9a96e", color: "#0a0806", borderRadius: 9, padding: "0.15rem 0.35rem", lineHeight: 1 }}>
                             {exportsLeft === 0 ? "0 left" : `${exportsLeft} left`}
                           </span>
+                        )}
+                        {user && isPro && (
+                          <span style={{ position: "absolute", top: -7, right: -7, fontSize: "0.55rem", fontWeight: 800, background: "#c9a96e", color: "#0a0806", borderRadius: 9, padding: "0.15rem 0.35rem", lineHeight: 1 }}>∞</span>
                         )}
                       </button>
                     </div>
